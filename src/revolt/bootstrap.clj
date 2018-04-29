@@ -8,16 +8,16 @@
             [revolt.plugin :refer [Plugin create-plugin] :as plugin]
             [revolt.utils :as utils]))
 
+(def ^:private default-plugin-ns "revolt.plugin")
+
 (defprotocol Context
   (classpaths [this]   "Returns project classpaths.")
   (target-dir [this]   "Returns a project target directory.")
   (config-val [this k] "Returns a value from configuration map.")
   (terminate  [this]   "Sends a signal to deactivate all plugins."))
 
-(def ^:private default-plugin-ns "revolt.plugin")
 
 (def context (atom {}))
-
 
 (def cli-options
   [["-c" "--config EDN" "EDN resource with revolt configuration."
@@ -66,16 +66,16 @@
                         (plugin/initialize-plugin kw (kw config-edn)))
                      (utils/build-params-list params :activate-plugins default-plugin-ns))
             app-ctx  (reify Context
-                      (classpaths [this] cpaths)
-                      (target-dir [this] target)
-                      (config-val [this k] (k config-edn))
-                      (terminate  [this] (partial shutdown plugins returns)))]
+                       (classpaths [this] cpaths)
+                       (target-dir [this] target)
+                       (config-val [this k] (k config-edn))
+                       (terminate  [this] (shutdown plugins returns)))]
 
         (reset! context app-ctx)
 
         ;; activate all the plugins sequentially one after another
         (doseq [p plugins]
-            (when-let [ret (.activate p @context)]
-              (swap! returns conj {p ret}))))
+          (when-let [ret (.activate p @context)]
+            (swap! returns conj {p ret}))))
 
       (log/error "Configuration not found."))))

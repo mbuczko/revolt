@@ -26,7 +26,7 @@
                         (log/error "Please correct it, and enter (fixed!) to resume development."))))))))
 
       ;; enforce global annihilation
-      ((.terminate ctx)))
+      (.terminate ctx))
 
     (deactivate [this ret]
       (log/debug "closing rebel"))))
