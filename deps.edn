@@ -1,0 +1,8 @@
+{:paths ["src"]
+ :deps {org.clojure/tools.cli {:mvn/version"0.3.5"}
+        org.clojure/java.classpath {:mvn/version "0.2.3"}
+        com.bhauman/rebel-readline {:mvn/version "0.1.2"}
+        net.sf.jpathwatch/jpathwatch {:mvn/version "0.95"}
+        io.aviso/pretty {:mvn/version "0.1.34"}
+        deraen/sass4clj {:mvn/version "0.3.1"}
+        ch.qos.logback/logback-classic {:mvn/version "1.2.3" :exclusions [org.slf4j/slf4j-api]}}}

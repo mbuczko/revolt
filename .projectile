@@ -1,0 +1,9 @@
+-/.git
+-/.repl
+-/TAGS
+-/*-init.clj
+-/*.log
+-/.nrepl-*
+-/assets/scripts
+-/node_modules
+-/vendor
