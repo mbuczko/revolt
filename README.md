@@ -16,12 +16,12 @@ real application-dependencies and still leverage boot/lein tools for development
 tools we used for ages?
 
 One of most interesting moves within this area was JUXT's [edge](https://juxt.pro/blog/posts/edge.html) and their attempt to build a simple but complete Clojure project
-based on the newest and most experimental things found around. Yeah, including Cognitect's new dependencies :)
+based on the newest and most experimental things found around. Yeah, including Cognitect's new dependencies.
 
 _Revolt_ is inspired by JUXT's edge and, at its core, tries to simplify attaching all these shiny tools to the project by gathering them in form of tasks and plugins.
 And yes, it depends on Cognitect's dependencies underneath and makes heavy use of newly introduced aliases by the way.
 
-Doesn't it sound like a [http://www.winestockwebdesign.com/Essays/Lisp_Curse.html](Lisp Curse) again? :)
+Doesn't it sound like a [Lisp Curse](http://www.winestockwebdesign.com/Essays/Lisp_Curse.html) again? :)
 
 # What's in the box?
 
