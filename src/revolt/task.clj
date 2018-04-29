@@ -11,18 +11,6 @@
 
 (defmulti create-task (fn [id opts classpaths target] id))
 
-;; built-in tasks
-
-(defmethod create-task ::sass [_ opts classpaths target]
-  (reify Task
-    (invoke [this input]
-      (sass/invoke input (:input-files opts) classpaths target))))
-
-(defmethod create-task ::cljs [_ opts classpaths target]
-  (reify Task
-    (invoke [this input]
-      (cljs/invoke input opts classpaths target))))
-
 
 (defn create-task-with-args
   "A helper function to load a namespace denoted by namespace-part of
@@ -54,3 +42,16 @@
 
 (def require-task (memoize require-task*))
 
+
+
+;; built-in tasks
+
+(defmethod create-task ::sass [_ opts classpaths target]
+  (reify Task
+    (invoke [this input]
+      (sass/invoke input (:input-files opts) classpaths target))))
+
+(defmethod create-task ::cljs [_ opts classpaths target]
+  (reify Task
+    (invoke [this input]
+      (cljs/invoke input opts classpaths target))))

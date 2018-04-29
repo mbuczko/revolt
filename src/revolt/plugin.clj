@@ -21,6 +21,7 @@
   passing plugin configuration as a second argument."
 
   [kw config]
+  (log/debug "loading plugin" kw)
   (if (qualified-keyword? kw)
     (let [ns (symbol (namespace kw))]
       (require ns)

@@ -17,7 +17,7 @@
   (terminate  [this]   "Sends a signal to deactivate all plugins."))
 
 
-(def context (atom {}))
+(defonce context (atom {}))
 
 (def cli-options
   [["-c" "--config EDN" "EDN resource with revolt configuration."
@@ -49,7 +49,6 @@
 (defn shutdown [plugins returns]
   (doseq [p plugins]
     (.deactivate p (get @returns p)))
-
   (System/exit 0))
 
 (defn -main
@@ -61,9 +60,7 @@
     (if-let [config-edn (load-config (:config params))]
       (let [returns (atom {})
             plugins (map
-                     #(let [kw (keyword %)]
-                        (log/debug "loading plugin" kw)
-                        (plugin/initialize-plugin kw (kw config-edn)))
+                     #(let [kw (keyword %)] (plugin/initialize-plugin kw (kw config-edn)))
                      (utils/build-params-list params :activate-plugins default-plugin-ns))
             app-ctx  (reify Context
                        (classpaths [this] cpaths)
@@ -71,6 +68,7 @@
                        (config-val [this k] (k config-edn))
                        (terminate  [this] (shutdown plugins returns)))]
 
+        ;; set global application context
         (reset! context app-ctx)
 
         ;; activate all the plugins sequentially one after another
