@@ -27,21 +27,21 @@ Doesn't it sound like a [Lisp Curse](http://www.winestockwebdesign.com/Essays/Li
 
 A couple of plugins you may really like:
 
-[x] [Rebel REPL](https://github.com/bhauman/rebel-readline) to give you best REPL experience
-[x] [Figwheel](https://github.com/bhauman/lein-figwheel) must-have for web development
-[x] [nREPL](https://github.com/clojure/tools.nrepl) obviously to let you use Emacs and Cider
-[x] Filesystem watcher able to watch and react on files changes
-[ ] Clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
+- [x] [Rebel REPL](https://github.com/bhauman/rebel-readline) to give you best REPL experience
+- [x] [Figwheel](https://github.com/bhauman/lein-figwheel) must-have for web development
+- [x] [nREPL](https://github.com/clojure/tools.nrepl) obviously to let you use Emacs and Cider
+- [x] Filesystem watcher able to watch and react on files changes
+- [ ] Clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
 
 and a few built-in tasks:
 
-[x] scss - transforms scss files into css
-[x] cljs - a cljs compiler
-[ ] stamp - dumped project info (package, version, git sha...)
-[ ] codox - API documentation with [codox](https://github.com/weavejester/codox)
-[ ] migrate - database migrating based on [flyway](https://flywaydb.org/)
-[ ] capsule - uberjar packaging from http://www.capsule.io/
-[ ] ancient - looking for outdated dependencies
+- [x] scss - transforms scss files into css
+- [x] cljs - a cljs compiler
+- [ ] stamp - dumped project info (package, version, git sha...)
+- [ ] codox - API documentation with [codox](https://github.com/weavejester/codox)
+- [ ] migrate - database migrating based on [flyway](https://flywaydb.org/)
+- [ ] capsule - uberjar packaging from http://www.capsule.io/
+- [ ] ancient - looking for outdated dependencies
 
 ## Plugins
 
