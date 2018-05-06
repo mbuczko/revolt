@@ -1,5 +1,6 @@
 (ns ^{:clojure.tools.namespace.repl/load false} revolt.plugins.watch
-  (:require [clojure.java.io :as io]
+  (:require [io.aviso.ansi]
+            [clojure.java.io :as io]
             [clojure.java.classpath :as classpath]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
@@ -14,8 +15,7 @@
   [{:keys [excluded-paths explicit-paths on-change]}]
   (reify Plugin
     (activate [this ctx]
-      (log/info "Starting filesystem watcher")
-
+      (log/debug "Starting filesystem watcher")
       (let [excludes   (utils/gather-paths excluded-paths)
             explicit   (utils/gather-paths explicit-paths)
             filesystem (java.nio.file.FileSystems/getDefault)
@@ -29,6 +29,8 @@
                                            (task/require-task task)))
                                   {}
                                   on-change)]
+
+        (println (io.aviso.ansi/yellow "Filesystem watcher initialized."))
 
         (apply watcher/watch-files
                (conj classpaths

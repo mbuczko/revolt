@@ -6,7 +6,8 @@
             [revolt.utils :as utils]))
 
 
-(defn invoke [input roots classpaths target]
+(defn invoke
+  [input roots classpaths target]
   (run!
    (fn [[input-file relative-path]]
      (log/debug "SCSS compile: {}" (.toString input-file))

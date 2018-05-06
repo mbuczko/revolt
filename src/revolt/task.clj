@@ -4,6 +4,7 @@
             [revolt.bootstrap :as bootstrap]
             [revolt.tasks.cljs :as cljs]
             [revolt.tasks.sass :as sass]
+            [revolt.tasks.test :as test]
             [clojure.tools.logging :as log]))
 
 (defprotocol Task
@@ -42,8 +43,6 @@
 
 (def require-task (memoize require-task*))
 
-
-
 ;; built-in tasks
 
 (defmethod create-task ::sass [_ opts classpaths target]
@@ -55,3 +54,9 @@
   (reify Task
     (invoke [this input]
       (cljs/invoke input opts classpaths target))))
+
+(defmethod create-task ::test [_ opts classpaths target]
+  (let [options (merge test/default-options opts)]
+    (reify Task
+      (invoke [this input]
+        (test/invoke opts)))))

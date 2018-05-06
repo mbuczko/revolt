@@ -17,7 +17,7 @@
                 (when-let [ns-str (:init-ns config)]
                   (let [ns-sym (symbol ns-str)]
                     (try
-                      (log/info "Loading Clojure code, please wait...")
+                      (log/debug "Loading Clojure code, please wait...")
                       (require ns-sym)
                       (in-ns ns-sym)
 

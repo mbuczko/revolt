@@ -12,7 +12,7 @@
   [config]
   (reify Plugin
     (activate [this ctx]
-      (log/info "Starting nREPL server")
+      (log/debug "Starting nREPL server")
 
       (let [handler (apply nrepl.server/default-handler
                            (conj (map #'cider.nrepl/resolve-or-fail cider.nrepl/cider-middleware)

@@ -31,12 +31,12 @@ A couple of plugins you may really like:
 - [x] [Figwheel](https://github.com/bhauman/lein-figwheel) must-have for web development
 - [x] [nREPL](https://github.com/clojure/tools.nrepl) obviously to let you use Emacs and Cider
 - [x] Filesystem watcher able to watch and react on files changes
-- [ ] Clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
 
 and a few built-in tasks:
 
 - [x] scss - transforms scss files into css
 - [x] cljs - a cljs compiler
+- [x] test - clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
 - [ ] stamp - dumped project info (package, version, git sha...)
 - [ ] codox - API documentation with [codox](https://github.com/weavejester/codox)
 - [ ] migrate - database migrating based on [flyway](https://flywaydb.org/)

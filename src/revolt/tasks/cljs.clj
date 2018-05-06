@@ -4,7 +4,8 @@
             [revolt.utils :as utils]))
 
 
-(defn invoke [input {:keys [builds]} classpaths target]
+(defn invoke
+  [input {:keys [builds]} classpaths target]
   (let [path (and input (.toString (.toPath input)))]
     (run!
      (fn [build]

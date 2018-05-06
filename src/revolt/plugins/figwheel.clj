@@ -26,7 +26,7 @@
         (let [target (.target-dir ctx)
               builds (ensure-relative-builds-paths cljs-opts target)]
 
-          (log/info "Starting figwheel, brace yourself.")
+          (log/debug "Starting figwheel, brace yourself.")
 
           (figwheel/start-figwheel!
            (-> config
