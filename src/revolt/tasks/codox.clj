@@ -1,11 +1,21 @@
 (ns revolt.tasks.codox
-  (:require [codox.main]))
+  (:require [clojure.tools.logging :as log]
+            [clojure.edn :as edn]
+            [codox.main]
+            [revolt.utils :as utils]))
 
-(defonce default-options
-  {
-   ;; The directory where the documentation will be generated
-   :output-path "target/doc"})
+(defn read-project-info
+  [path]
+  (try
+    (edn/read-string (slurp path))
+    (catch Exception ex
+      (log/debug "No project information found in project.edn"))))
 
 (defn invoke
-  [opts]
-  (codox.main/generate-docs opts))
+  [opts target]
+  (let [project-path (utils/ensure-relative-path target "project.edn")
+        project-info (read-project-info project-path)
+        codox-opts (-> project-info
+                       (merge opts)
+                       (assoc :output-path (utils/ensure-relative-path target "doc")))]
+    (codox.main/generate-docs codox-opts)))

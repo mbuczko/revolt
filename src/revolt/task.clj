@@ -5,6 +5,7 @@
             [revolt.tasks.cljs :as cljs]
             [revolt.tasks.sass :as sass]
             [revolt.tasks.test :as test]
+            [revolt.tasks.info :as info]
             [revolt.tasks.codox :as codox]
             [clojure.tools.logging :as log]))
 
@@ -36,11 +37,13 @@
   building directory as arguments."
 
   [kw]
-  (let [ctx @bootstrap/context]
-    (create-task-with-args kw
-                           (.config-val ctx kw)
-                           (.classpaths ctx)
-                           (.target-dir ctx))))
+  (let [ctx  @bootstrap/context
+        task (create-task-with-args kw
+                                    (.config-val ctx kw)
+                                    (.classpaths ctx)
+                                    (.target-dir ctx))]
+    (fn [& input]
+      (.invoke task (first input)))))
 
 (def require-task (memoize require-task*))
 
@@ -63,7 +66,11 @@
         (test/invoke opts)))))
 
 (defmethod create-task ::codox [_ opts classpaths target]
-  (let [options (merge codox/default-options opts)]
-    (reify Task
-      (invoke [this input]
-        (codox/invoke opts)))))
+  (reify Task
+    (invoke [this input]
+      (codox/invoke (merge opts input) target))))
+
+(defmethod create-task ::info [_ opts classpaths target]
+  (reify Task
+    (invoke [this input]
+      (info/invoke (merge opts input) target))))

@@ -39,7 +39,7 @@
                          (doseq [[matcher task] matchers]
                            (when (.matches matcher path)
                              (if task
-                               (.invoke task file)
+                               (task file)
                                (log/error "No task {} found to react on change of: {}" task path))))))))))
 
     (deactivate [this ret]
