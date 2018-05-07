@@ -5,6 +5,7 @@
             [revolt.tasks.cljs :as cljs]
             [revolt.tasks.sass :as sass]
             [revolt.tasks.test :as test]
+            [revolt.tasks.codox :as codox]
             [clojure.tools.logging :as log]))
 
 (defprotocol Task
@@ -60,3 +61,9 @@
     (reify Task
       (invoke [this input]
         (test/invoke opts)))))
+
+(defmethod create-task ::codox [_ opts classpaths target]
+  (let [options (merge codox/default-options opts)]
+    (reify Task
+      (invoke [this input]
+        (codox/invoke opts)))))

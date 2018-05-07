@@ -38,7 +38,7 @@ and a few built-in tasks:
 - [x] cljs - a cljs compiler
 - [x] test - clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
 - [ ] stamp - dumped project info (package, version, git sha...)
-- [ ] codox - API documentation with [codox](https://github.com/weavejester/codox)
+- [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
 - [ ] migrate - database migrating based on [flyway](https://flywaydb.org/)
 - [ ] capsule - uberjar packaging from http://www.capsule.io/
 - [ ] ancient - looking for outdated dependencies
