@@ -10,7 +10,7 @@
   [input roots classpaths target]
   (run!
    (fn [[input-file relative-path]]
-     (log/debug "SCSS compile: {}" (.toString input-file))
+     (log/debug "SCSS processing" (.toString input-file))
      (utils/timed
       (sass/sass-compile-to-file
        input-file

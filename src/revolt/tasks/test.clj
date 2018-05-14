@@ -1,6 +1,7 @@
 (ns revolt.tasks.test
   (:require [metosin.bat-test.impl :as bat-test]))
 
+
 (defonce default-options
   {
    ;; Regex used to select test namespaces

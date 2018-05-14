@@ -40,7 +40,7 @@
                            (when (.matches matcher path)
                              (if task
                                (task file)
-                               (log/error "No task {} found to react on change of: {}" task path))))))))))
+                               (log/errorf "No task %s found to react on change of: %s" task path))))))))))
 
     (deactivate [this ret]
       (log/debug "closing watcher")

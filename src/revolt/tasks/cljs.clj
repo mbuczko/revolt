@@ -9,7 +9,7 @@
   (let [path (and input (.toString (.toPath input)))]
     (run!
      (fn [build]
-       (log/debug "CLJS compiling: {}" (or path (:id build)))
+       (log/debug "CLJS compiling" (or path (:id build)))
        (utils/timed
         (cljs.build.api/build (or path (:source-paths build)) (:compiler build))))
      (eduction

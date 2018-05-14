@@ -8,8 +8,6 @@
             [revolt.plugin :refer [Plugin create-plugin] :as plugin]
             [revolt.utils :as utils]))
 
-(def ^:private default-plugin-ns "revolt.plugin")
-
 (defprotocol Context
   (classpaths [this]   "Returns project classpaths.")
   (target-dir [this]   "Returns a project target directory.")
@@ -34,7 +32,7 @@
   (when-let [res (io/resource config-resource)]
     (try
       (let [config (slurp res)]
-        (edn/read-string config))
+        (read-string config))
       (catch Exception ex
         (log/error (.getMessage ex))))))
 
@@ -61,7 +59,7 @@
       (let [returns (atom {})
             plugins (map
                      #(let [kw (keyword %)] (plugin/initialize-plugin kw (kw config-edn)))
-                     (utils/build-params-list params :activate-plugins default-plugin-ns))
+                     (utils/build-params-list params :activate-plugins))
             app-ctx  (reify Context
                        (classpaths [this] cpaths)
                        (target-dir [this] target)

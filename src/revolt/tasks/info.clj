@@ -1,7 +1,8 @@
 (ns revolt.tasks.info
   (:require [revolt.shell :refer [git]]
             [revolt.utils :as utils]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log]))
 
 (def datetime-formatter
   (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd HH:mm:ss"))
@@ -14,5 +15,6 @@
                     :timestamp (.format (java.time.LocalDateTime/now) datetime-formatter)} kv)]
 
     (let [path (utils/ensure-relative-path target "project.edn")]
+      (log/debug "Dumping project information into" path)
       (with-open [out (io/writer path)] (spit out info))
       info)))

@@ -1,8 +1,9 @@
 (ns revolt.tasks.codox
   (:require [clojure.tools.logging :as log]
             [clojure.edn :as edn]
-            [codox.main]
-            [revolt.utils :as utils]))
+            [revolt.utils :as utils]
+            [codox.main]))
+
 
 (defn read-project-info
   [path]
@@ -13,9 +14,10 @@
 
 (defn invoke
   [opts target]
-  (let [project-path (utils/ensure-relative-path target "project.edn")
-        project-info (read-project-info project-path)
-        codox-opts (-> project-info
-                       (merge opts)
-                       (assoc :output-path (utils/ensure-relative-path target "doc")))]
-    (codox.main/generate-docs codox-opts)))
+  (let [target-path  (utils/ensure-relative-path target "doc")
+        project-path (utils/ensure-relative-path target "project.edn")
+        project-info (read-project-info project-path)]
+
+    (codox.main/generate-docs (-> project-info
+                                  (merge opts)
+                                  (assoc :output-path target-path)))))

@@ -1,7 +1,9 @@
 (ns revolt.utils
   (:require [clojure.java.io :as io]
             [clojure.string :as str])
-  (:import  (java.nio.file Paths)))
+  (:import  (java.nio.file Paths)
+            (java.io File)
+            (java.security MessageDigest)))
 
 (defn gather-paths
   [paths]
@@ -21,14 +23,16 @@
     (str default-ns "/" s)))
 
 (defn ensure-relative-path
-  [target path]
-  (when path
-    (.toString (Paths/get target (.split path "/")))))
+  ([path]
+   (ensure-relative-path "" path))
+  ([target path]
+   (when path
+     (.toString (Paths/get target (.split path File/separator))))))
 
 (defn build-params-list
-  [input-params kw default-ns]
+  [input-params kw]
   (->> (str/split (kw input-params) #",")
-       (map (partial ensure-ns default-ns))))
+       (map (partial ensure-ns "revolt.plugin"))))
 
 (defmacro timed
   "Evaluates expr and prints the time it took.  Returns the value of expr."

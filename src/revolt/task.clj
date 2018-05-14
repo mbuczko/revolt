@@ -14,7 +14,6 @@
 
 (defmulti create-task (fn [id opts classpaths target] id))
 
-
 (defn create-task-with-args
   "A helper function to load a namespace denoted by namespace-part of
   provided qualified keyword, and create a task."
@@ -25,8 +24,7 @@
       (log/debug "initializing task" kw)
       (require (symbol ns))
       (create-task kw opts classpaths target))
-    (log/error "Wrong keyword {}. Qualified keyword required." kw)))
-
+    (log/errorf "Wrong keyword %s. Qualified keyword required." kw)))
 
 (defn require-task*
   "Creates a task instance from qualified keyword.
@@ -45,7 +43,14 @@
     (fn [& input]
       (.invoke task (first input)))))
 
-(def require-task (memoize require-task*))
+(def require-task-cached (memoize require-task*))
+
+(defmacro require-task
+  [kw & [opt arg]]
+  `(when-let [task# (require-task-cached ~kw)]
+     (if (and '~arg (= ~opt :as))
+       (intern *ns* '~arg task#)
+       task#)))
 
 ;; built-in tasks
 

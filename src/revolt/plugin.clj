@@ -26,7 +26,7 @@
     (let [ns (symbol (namespace kw))]
       (require ns)
       (create-plugin kw config))
-    (log/error "Wrong keyword {}. Qualified keyword required." kw)))
+    (log/errorf "Wrong keyword %s. Qualified keyword required." kw)))
 
 ;; default plugins
 
