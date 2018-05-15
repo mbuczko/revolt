@@ -7,6 +7,7 @@
             [revolt.tasks.test :as test]
             [revolt.tasks.info :as info]
             [revolt.tasks.codox :as codox]
+            [revolt.tasks.capsule :as capsule]
             [clojure.tools.logging :as log]))
 
 (defprotocol Task
@@ -79,3 +80,8 @@
   (reify Task
     (invoke [this input]
       (info/invoke (merge opts input) target))))
+
+(defmethod create-task ::capsule [_ opts classpaths target]
+  (reify Task
+    (invoke [this input]
+      (capsule/invoke (merge opts input) target))))

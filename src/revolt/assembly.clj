@@ -1,6 +1,6 @@
 (ns revolt.assembly
   "This is a refined copy of JUXT's mach.pack.alpha.impl.assembly namespace
-  containing functions assembling an uberjars."
+  containing helper functions for assembling uberjars."
   
   (:require
    [clojure.java.io :as io])

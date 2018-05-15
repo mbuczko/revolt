@@ -1,15 +1,15 @@
-(ns revolt.elodin
-  "This is a copy of JUXT's mach.pack.alpha.impl.elodin containing
-  helpers functions for creating uberjars."
-  
+(ns revolt.digest
+  "This is a copy of JUXT's mach.pack.alpha.impl.elodin namespace
+  containing helper functions for creating jars SHA-256 signatures."
+
   (:require
    [clojure.java.io :as io])
   (:import
-    [java.nio.file Files Paths]))
+   [java.nio.file Files Paths]))
 
 (defn- signature
-  [algorithm]
-  (javax.xml.bind.DatatypeConverter/printHexBinary (.digest algorithm)))
+  [message-digest]
+  (javax.xml.bind.DatatypeConverter/printHexBinary (.digest message-digest)))
 
 (defn- consume-input-stream
   [input-stream]
@@ -20,11 +20,11 @@
 (defn- sha256
   [file]
   (.getMessageDigest
-    (doto
-      (java.security.DigestInputStream.
+   (doto
+       (java.security.DigestInputStream.
         (io/input-stream file)
         (java.security.MessageDigest/getInstance "SHA-256"))
-      consume-input-stream)))
+     consume-input-stream)))
 
 (defn hash-derived-name
   [file]
@@ -48,4 +48,4 @@
 
 (defn full-path-derived-name
   [file]
-(file->path-seq file))
+  (file->path-seq file))

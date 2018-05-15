@@ -1,6 +1,8 @@
 (ns revolt.utils
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str])
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
+            [clojure.string :as str]
+            [clojure.tools.logging :as log])
   (:import  (java.nio.file Paths)
             (java.io File)
             (java.security MessageDigest)))
@@ -33,6 +35,18 @@
   [input-params kw]
   (->> (str/split (kw input-params) #",")
        (map (partial ensure-ns "revolt.plugin"))))
+
+(defn safe-read-edn
+  [path]
+  (try
+    (edn/read-string (slurp path))
+    (catch Exception ex
+      (log/debug "No project information found in" path))))
+
+(defn read-project-info
+  [target]
+  (safe-read-edn
+   (ensure-relative-path target "project.edn")))
 
 (defmacro timed
   "Evaluates expr and prints the time it took.  Returns the value of expr."

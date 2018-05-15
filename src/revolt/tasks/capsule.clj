@@ -7,7 +7,7 @@
             [clojure.string :as str]
             [revolt.assembly :refer [spit-jar!]]
             [revolt.utils :as utils]
-            [revolt.elodin :as elodin])
+            [revolt.digest :as digest])
   (:import  (java.io File)))
 
 (defn filter-paths
@@ -31,10 +31,10 @@
   (.endsWith (.getName f) (str "." ext)))
 
 (defn classpath->jar
-  [classpath]
+  [classpath {:keys [output main group version]}]
   (let [cp (map io/file (str/split classpath (re-pattern File/pathSeparator)))]
     (spit-jar!
-     "dist"
+     output
      (concat
 
       ;; directories on the classpath
@@ -46,29 +46,34 @@
             (filter (memfn isFile) (file-seq dir)))))
        (filter (memfn isDirectory) cp))
 
-      ;; jar deps
+      ;; jar dependencies
       (sequence
        (comp
         (map file-seq)
         cat
         (filter (memfn isFile))
         (filter #(by-ext % "jar"))
-        (map (juxt (comp utils/ensure-relative-path
-                         elodin/hash-derived-name)
+        (map (juxt (comp digest/path-seq->str
+                         digest/hash-derived-name)
                    io/file)))
-       cp)      
+       cp)
       [["Capsule.class" (io/resource "Capsule.class")]])
      (cond->
          [["Application-Class" "clojure.main"]
-          ["Application-ID" application-id]
-          ["Application-Version" application-version]]
+          ["Application-ID" group]
+          ["Application-Version" version]]
        main
        (conj ["Args" (str "-m " main)]))
-     
+
      "Capsule")))
 
 (defn invoke
-  [{:keys [exclude-paths extra-paths]} target]
+  [{:keys [exclude-paths
+           extra-paths
+           output-jar
+           application-main
+           application-version
+           application-group]} target]
 
   (let [deps-edn  (io/file "deps.edn")
         deps-map  (-> deps-edn
@@ -82,6 +87,10 @@
      (tools.deps/make-classpath
       (tools.deps/resolve-deps deps-map nil)
       (resolve-sibling-paths (:paths deps-map) deps-path)
-      {:extra-paths extra-paths}))
-
-    ))
+      {:extra-paths extra-paths})
+     (merge
+      {:main    application-main
+       :group   application-group
+       :version application-version
+       :output  output-jar}     
+      (utils/read-project-info target)))))
