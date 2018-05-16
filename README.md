@@ -39,7 +39,7 @@ and a few built-in tasks:
 - [x] test - clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
 - [x] info - project info (name, description, package, version, git sha...)
 - [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
-- [ ] migrate - database migrating based on [flyway](https://flywaydb.org/)
+- [ ] lint - linter based on [eastwood](https://github.com/jonase/eastwood)
 - [ ] capsule - uberjar packaging from http://www.capsule.io/
 - [ ] ancient - looking for outdated dependencies
 
