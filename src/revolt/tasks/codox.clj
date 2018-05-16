@@ -4,9 +4,6 @@
 
 (defn invoke
   [opts target]
-  (let [target-path  (utils/ensure-relative-path target "doc")
-        project-info (utils/read-project-info target)]
-
-    (codox.main/generate-docs (-> project-info
-                                  (merge opts)
-                                  (assoc :output-path target-path)))))
+  (let [target-path (utils/ensure-relative-path target "doc")]
+    (codox.main/generate-docs 
+     (assoc opts :output-path target-path))))

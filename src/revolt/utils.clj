@@ -43,11 +43,6 @@
     (catch Exception ex
       (log/debug "No project information found in" path))))
 
-(defn read-project-info
-  [target]
-  (safe-read-edn
-   (ensure-relative-path target "project.edn")))
-
 (defmacro timed
   "Evaluates expr and prints the time it took.  Returns the value of expr."
   [expr]

@@ -40,7 +40,8 @@ and a few built-in tasks:
 - [x] info - project info (name, description, package, version, git sha...)
 - [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
 - [ ] lint - linter based on [eastwood](https://github.com/jonase/eastwood)
-- [ ] capsule - uberjar packaging from http://www.capsule.io/
+- [ ] uberjar - [onejar](http://one-jar.sourceforge.net/) packaging from JUXT's [pack.alpha](https://github.com/juxt/pack.alpha)
+- [ ] capsule - [capsule](http://www.capsule.io) packaging from JUXT's [pack.alpha](https://github.com/juxt/pack.alpha)
 - [ ] ancient - looking for outdated dependencies
 
 ## Plugins
