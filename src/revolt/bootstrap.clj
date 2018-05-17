@@ -8,7 +8,7 @@
             [revolt.plugin :refer [Plugin create-plugin] :as plugin]
             [revolt.utils :as utils]))
 
-(defprotocol Context
+(defprotocol PluginContext
   (classpaths [this]   "Returns project classpaths.")
   (target-dir [this]   "Returns a project target directory.")
   (config-val [this k] "Returns a value from configuration map.")
@@ -60,7 +60,7 @@
             plugins (map
                      #(let [kw (keyword %)] (plugin/initialize-plugin kw (kw config-edn)))
                      (utils/build-params-list params :activate-plugins))
-            app-ctx  (reify Context
+            app-ctx  (reify PluginContext
                        (classpaths [this] cpaths)
                        (target-dir [this] target)
                        (config-val [this k] (k config-edn))

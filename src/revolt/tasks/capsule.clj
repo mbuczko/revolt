@@ -25,14 +25,16 @@
   [paths root]
   (map #(.resolveSibling root %) paths))
 
-(defn invoke
-  [{:keys [exclude-paths
-           extra-paths
-           output-jar
-           manifest
-           group
-           version]} target]
+(defn add-tuple-maybe
+  "Adds a new tuple [k v] only if there was no k already among provided tuples.
+  Newly added tuple is placed at the end of vector of tuples."
+  [tuples k v]
+  (if (seq (filterv #(= (first %) k) tuples))
+    tuples
+    (conj tuples [k v])))
 
+(defn invoke
+  [{:keys [exclude-paths extra-paths output-jar manifest]} ctx target]
   (let [deps-edn  (io/file "deps.edn")
         deps-map  (-> deps-edn
                       (tools.deps.reader/slurp-deps)
@@ -46,11 +48,14 @@
       (tools.deps/resolve-deps deps-map nil)
       (resolve-sibling-paths (:paths deps-map) deps-path)
       {:extra-paths (conj ["target"] extra-paths)})
-     
+
      ;; resulting capsule jar location
      output-jar
-     
-     ;; map of manifest key-values
-     (merge {"Application-ID" group
-             "Application-Version" version}
-            manifest))))
+
+     ;; generate vector of manifest tuples
+     (-> manifest
+         (add-tuple-maybe "Application-ID" (:group ctx))
+         (add-tuple-maybe "Application-Version" (:version ctx))))
+
+    ;; return capsule location as a result
+    {:capsule output-jar}))

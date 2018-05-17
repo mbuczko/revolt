@@ -3,7 +3,10 @@
             [codox.main]))
 
 (defn invoke
-  [opts target]
+  [opts ctx target]
   (let [target-path (utils/ensure-relative-path target "doc")]
     (codox.main/generate-docs 
-     (assoc opts :output-path target-path))))
+     (-> ctx
+         (select-keys [:name :group :version :description])
+         (merge opts)
+         (assoc :output-path target-path)))))

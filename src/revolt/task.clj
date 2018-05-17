@@ -11,7 +11,7 @@
             [clojure.tools.logging :as log]))
 
 (defprotocol Task
-  (invoke [this input] "Starts a task with given input file(s)."))
+  (invoke [this input ctx] "Starts a task with given input file(s)."))
 
 (defmulti create-task (fn [id opts classpaths target] id))
 
@@ -27,6 +27,7 @@
       (create-task kw opts classpaths target))
     (log/errorf "Wrong keyword %s. Qualified keyword required." kw)))
 
+
 (defn require-task*
   "Creates a task instance from qualified keyword.
 
@@ -41,8 +42,13 @@
                                     (.config-val ctx kw)
                                     (.classpaths ctx)
                                     (.target-dir ctx))]
-    (fn [& input]
-      (.invoke task (first input)))))
+    (fn [& [input context]]
+      (let [context-as-input? (= (type input) ::ContextMap)
+            context-map (or context
+                            (when context-as-input? input)
+                            ^{:type ::ContextMap} {})]
+
+        (.invoke task (when-not context-as-input? input) context-map)))))
 
 (def require-task-cached (memoize require-task*))
 
@@ -57,31 +63,35 @@
 
 (defmethod create-task ::sass [_ opts classpaths target]
   (reify Task
-    (invoke [this input]
-      (sass/invoke input (:input-files opts) classpaths target))))
+    (invoke [this input ctx]
+      (sass/invoke input (:input-files opts) classpaths target)
+      ctx)))
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (reify Task
-    (invoke [this input]
-      (cljs/invoke input opts classpaths target))))
+    (invoke [this input ctx]
+      (cljs/invoke input opts classpaths target)
+      ctx)))
 
 (defmethod create-task ::test [_ opts classpaths target]
   (let [options (merge test/default-options opts)]
     (reify Task
-      (invoke [this input]
-        (test/invoke opts)))))
+      (invoke [this input ctx]
+        (test/invoke opts)
+        ctx))))
 
 (defmethod create-task ::codox [_ opts classpaths target]
   (reify Task
-    (invoke [this input]
-      (codox/invoke (merge opts input) target))))
+    (invoke [this input ctx]
+      (codox/invoke (merge opts input) ctx target)
+      ctx)))
 
 (defmethod create-task ::info [_ opts classpaths target]
   (reify Task
-    (invoke [this input]
-      (info/invoke (merge opts input) target))))
+    (invoke [this input ctx]
+      (merge ctx (info/invoke (merge opts input) target)))))
 
 (defmethod create-task ::capsule [_ opts classpaths target]
   (reify Task
-    (invoke [this input]
-      (capsule/invoke (merge opts input) target))))
+    (invoke [this input ctx]
+      (merge ctx (capsule/invoke (merge opts input) ctx target)))))
