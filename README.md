@@ -37,12 +37,13 @@ and a few built-in tasks:
 - [x] scss - transforms scss files into css
 - [x] cljs - a cljs compiler
 - [x] test - clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
-- [x] info - project info (name, description, package, version, git sha...)
-- [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
+- [x] info - project info (name, description, package, version, git branch, sha...)
 - [ ] lint - linter based on [eastwood](https://github.com/jonase/eastwood)
+- [ ] analyse - static code analyzer based on [kibit](https://github.com/jonase/kibit)
 - [ ] uberjar - [onejar](http://one-jar.sourceforge.net/) packaging from JUXT's [pack.alpha](https://github.com/juxt/pack.alpha)
-- [ ] capsule - [capsule](http://www.capsule.io) packaging from JUXT's [pack.alpha](https://github.com/juxt/pack.alpha)
+- [x] capsule - [capsule](http://www.capsule.io) packaging from JUXT's [pack.alpha](https://github.com/juxt/pack.alpha)
 - [ ] ancient - looking for outdated dependencies
+- [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
 
 ## Plugins
 
@@ -89,7 +90,7 @@ And configure it later as follows:
 Each plugin gets a _context_ during activation phase. Context contains all the crucial stuff that most of plugins base on:
 
 ```clojure
-    (defprotocol Context
+    (defprotocol PluginContext
       (classpaths [this]   "Returns project classpaths.")
       (target-dir [this]   "Returns a project target directory.")
       (config-val [this k] "Returns a value from configuration map.")

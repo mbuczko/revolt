@@ -11,7 +11,7 @@
             [clojure.tools.logging :as log]))
 
 (defprotocol Task
-  (invoke [this input ctx] "Starts a task with given input file(s)."))
+  (invoke [this input ctx] "Starts a task with provided input data and pipelined context."))
 
 (defmulti create-task (fn [id opts classpaths target] id))
 
@@ -43,6 +43,38 @@
                                     (.classpaths ctx)
                                     (.target-dir ctx))]
     (fn [& [input context]]
+
+      ;; as we operate on 2 optional parameter, 3 cases may happen:
+      ;;
+      ;; 1. we will get an input only, like (info {:version 0.0.2})
+      ;;    this is a case where no context was given, and it should
+      ;;    be created automatically.
+      ;;
+      ;; 2. we will get both: input and context.
+      ;;    this is a case where context was given either directly
+      ;;    along with input, eg. `(info {:version} ctx)` or task has
+      ;;    partially defined input, like:
+      ;;
+      ;;     (partial capsule {:version 0.0.2})
+      ;;
+      ;;    and has been composed with other tasks:
+      ;;
+      ;;     (def composed-task (comp capsule info))
+      ;;
+      ;;    invocation of composed-task will pass a context from one task
+      ;;    to the other. tasks having input partially defined will get
+      ;;    an input as a first parameter and context as a second one.
+      ;;
+      ;; 3. we will get a context only.
+      ;;    this a slight variation of case 2. and may happen when task is
+      ;;    composed together with others and has no partially defined input
+      ;;    parameter. in this case task will be called with one parameter
+      ;;    only - with an updated context.
+      ;;
+      ;;  to differentiate between case 1 and 3 a type check on first argument
+      ;;  is applied. a ::ContextMap type indicates that argument is a context.
+      ;;  otherwise it is an input argument (case 1).
+
       (let [context-as-input? (= (type input) ::ContextMap)
             context-map (or context
                             (when context-as-input? input)
@@ -55,9 +87,14 @@
 (defmacro require-task
   [kw & [opt arg]]
   `(when-let [task# (require-task-cached ~kw)]
-     (if (and '~arg (= ~opt :as))
-       (intern *ns* '~arg task#)
-       task#)))
+     (intern *ns*
+             (or (and (= ~opt :as) '~arg) '~(symbol (name kw)))
+             task#)))
+
+(defmacro require-all [kws]
+  `(when (coll? ~kws)
+     ~@(map #(list `require-task %) kws)
+     ~kws))
 
 ;; built-in tasks
 
