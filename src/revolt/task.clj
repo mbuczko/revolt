@@ -7,6 +7,7 @@
             [revolt.tasks.test :as test]
             [revolt.tasks.info :as info]
             [revolt.tasks.codox :as codox]
+            [revolt.tasks.clean :as clean]
             [revolt.tasks.capsule :as capsule]
             [clojure.tools.logging :as log]))
 
@@ -23,8 +24,11 @@
   (if (qualified-keyword? kw)
     (let [ns (namespace kw)]
       (log/debug "initializing task" kw)
-      (require (symbol ns))
-      (create-task kw opts classpaths target))
+      (try
+        (require (symbol ns))
+        (create-task kw opts classpaths target)
+        (catch Exception ex
+          (log/errorf "Cannot initialize task %s: %s" kw (.getMessage ex)))))
     (log/errorf "Wrong keyword %s. Qualified keyword required." kw)))
 
 
@@ -61,7 +65,7 @@
       ;;
       ;;     (def composed-task (comp capsule info))
       ;;
-      ;;    invocation of composed-task will pass a context from one task
+      ;;    invocation of composed task will pass a context from one task
       ;;    to the other. tasks having input partially defined will get
       ;;    an input as a first parameter and context as a second one.
       ;;
@@ -72,8 +76,8 @@
       ;;    only - with an updated context.
       ;;
       ;;  to differentiate between case 1 and 3 a type check on first argument
-      ;;  is applied. a ::ContextMap type indicates that argument is a context.
-      ;;  otherwise it is an input argument (case 1).
+      ;;  is applied. a ::ContextMap type indicates that argument is a context
+      ;;  (case 3), otherwise it is an input argument (case 1).
 
       (let [context-as-input? (= (type input) ::ContextMap)
             context-map (or context
@@ -93,10 +97,15 @@
 
 (defmacro require-all [kws]
   `(when (coll? ~kws)
-     ~@(map #(list `require-task %) kws)
-     ~kws))
+     [~@(map #(list `require-task %) kws)]))
 
 ;; built-in tasks
+
+(defmethod create-task ::clean [_ opts classpaths target]
+  (reify Task
+    (invoke [this input ctx]
+      (clean/invoke input target)
+      ctx)))
 
 (defmethod create-task ::sass [_ opts classpaths target]
   (reify Task
@@ -107,7 +116,7 @@
 (defmethod create-task ::cljs [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (cljs/invoke input opts classpaths target)
+      (cljs/invoke (merge opts input) classpaths target)
       ctx)))
 
 (defmethod create-task ::test [_ opts classpaths target]

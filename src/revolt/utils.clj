@@ -43,10 +43,21 @@
     (catch Exception ex
       (log/debug "No project information found in" path))))
 
+(defn dissoc-maybe
+  "Conditionally dissocs from map a key described by vector v.
+  Returns altered map when predicate was true, or original map otherwise."
+
+  [m v pred]
+  (if pred
+    (if-let [nav (seq (pop v))]
+      (update-in m nav dissoc (last v))
+      (dissoc m (first v)))
+    m))
+
 (defmacro timed
   "Evaluates expr and prints the time it took.  Returns the value of expr."
-  [expr]
+  [task expr]
   `(let [start# (. System (nanoTime))
          ret# ~expr]
-     (println (format "Elapsed time: %.2f secs" (/ (double (- (. System (nanoTime)) start#)) 1000000000.0)))
+     (println (format "%s => elapsed time: %.2f secs" ~task (/ (double (- (. System (nanoTime)) start#)) 1000000000.0)))
      ret#))

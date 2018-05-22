@@ -47,7 +47,7 @@
      (tools.deps/make-classpath
       (tools.deps/resolve-deps deps-map nil)
       (resolve-sibling-paths (:paths deps-map) deps-path)
-      {:extra-paths (conj ["target"] extra-paths)})
+      {:extra-paths (conj [target] extra-paths)})
 
      ;; resulting capsule jar location
      output-jar
