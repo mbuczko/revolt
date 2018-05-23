@@ -123,7 +123,7 @@
   (let [options (merge test/default-options opts)]
     (reify Task
       (invoke [this input ctx]
-        (test/invoke opts)
+        (test/invoke (merge options input))
         ctx))))
 
 (defmethod create-task ::codox [_ opts classpaths target]

@@ -44,9 +44,7 @@
       (log/debug "No project information found in" path))))
 
 (defn dissoc-maybe
-  "Conditionally dissocs from map a key described by vector v.
-  Returns altered map when predicate was true, or original map otherwise."
-
+  "Dissocs a nested key described by vector v when given predicate is true."
   [m v pred]
   (if pred
     (if-let [nav (seq (pop v))]
