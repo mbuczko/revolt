@@ -51,11 +51,12 @@
 
 (defn -main
   [& args]
-  (let [params  (:options (cli/parse-opts args cli-options))
-        target  (:target params)
-        cpaths  (collect-classpaths target)]
+  (let [params (:options (cli/parse-opts args cli-options))
+        target (:target params)
+        config (:config params)
+        cpaths (collect-classpaths target)]
 
-    (if-let [config-edn (load-config (:config params))]
+    (if-let [config-edn (load-config config)]
       (let [returns (atom {})
             plugins (map
                      #(let [kw (keyword %)] (plugin/initialize-plugin kw (kw config-edn)))

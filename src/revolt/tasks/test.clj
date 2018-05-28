@@ -35,4 +35,4 @@
 
 (defn invoke
   [opts]
-  (bat-test/run opts))
+  {:test-report (bat-test/run opts)})

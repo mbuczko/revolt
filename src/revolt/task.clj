@@ -108,29 +108,32 @@
       ctx)))
 
 (defmethod create-task ::sass [_ opts classpaths target]
-  (reify Task
-    (invoke [this input ctx]
-      (sass/invoke input (:input-files opts) classpaths target)
-      ctx)))
+  (letfn [(filter-resources [resources path]
+            (filter #(or (nil? path) (.endsWith path %)) resources))]
+
+    (reify Task
+      (invoke [this input ctx]
+        (sass/invoke (or (when (map? input) (merge opts input))
+                         (update opts :resources filter-resources input))
+                     classpaths
+                     target)
+        ctx))))
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (cljs/invoke (merge opts input) classpaths target)
-      ctx)))
+      (merge ctx (cljs/invoke (merge opts input) classpaths target)))))
 
 (defmethod create-task ::test [_ opts classpaths target]
   (let [options (merge test/default-options opts)]
     (reify Task
       (invoke [this input ctx]
-        (test/invoke (merge options input))
-        ctx))))
+        (merge ctx (test/invoke (merge options input)))))))
 
 (defmethod create-task ::codox [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (codox/invoke (merge opts input) ctx target)
-      ctx)))
+      (merge ctx (codox/invoke (merge opts input) ctx target)))))
 
 (defmethod create-task ::info [_ opts classpaths target]
   (reify Task

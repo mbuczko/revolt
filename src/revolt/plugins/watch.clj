@@ -7,7 +7,8 @@
             [revolt.plugin :refer [Plugin create-plugin]]
             [revolt.task :as task]
             [revolt.watcher :as watcher]
-            [revolt.utils :as utils]))
+            [revolt.utils :as utils]
+            [revolt.bootstrap :as bootstrap]))
 
 (defn init-plugin
   "Initializes filesystem watcher plugin."
@@ -16,17 +17,18 @@
   (reify Plugin
     (activate [this ctx]
       (log/debug "Starting filesystem watcher")
-      (let [excludes   (utils/gather-paths excluded-paths)
-            explicit   (utils/gather-paths explicit-paths)
-            filesystem (java.nio.file.FileSystems/getDefault)
-            classpaths (or (seq (map #(.toFile %) explicit))
-                           (remove
-                            #(contains? excludes (.toPath %))
-                            (.classpaths ctx)))
+      (let [excludes    (utils/gather-paths excluded-paths)
+            explicit    (utils/gather-paths explicit-paths)
+            filesystem  (java.nio.file.FileSystems/getDefault)
+            current-dir (.toAbsolutePath (.getPath filesystem "" (make-array String 0)))
+            classpaths  (or (seq (map #(.toFile %) explicit))
+                            (remove
+                             #(contains? excludes (.toPath %))
+                             (.classpaths ctx)))
             matchers   (reduce-kv (fn [m task pattern]
                                     (assoc m
                                            (.getPathMatcher filesystem pattern)
-                                           (task/require-task task)))
+                                           (task/require-task-cached task)))
                                   {}
                                   on-change)]
 
@@ -35,11 +37,11 @@
         (apply watcher/watch-files
                (conj classpaths
                      (fn [{:keys [file]}]
-                       (let [path (.toPath file)]
+                       (let [path (.relativize current-dir (.toPath file))]
                          (doseq [[matcher task] matchers]
                            (when (.matches matcher path)
                              (if task
-                               (task file)
+                               (task path)
                                (log/errorf "No task %s found to react on change of: %s" task path))))))))))
 
     (deactivate [this ret]

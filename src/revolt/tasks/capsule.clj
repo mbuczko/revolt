@@ -106,4 +106,4 @@
      (config->manifest input))
 
     ;; return capsule location as a result
-    (assoc ctx :capsule output-jar)))
+    {:capsule output-jar}))

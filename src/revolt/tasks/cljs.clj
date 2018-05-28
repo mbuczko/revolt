@@ -5,19 +5,17 @@
 
 
 (defn invoke
-  [{:keys [optimizations builds]} classpaths target]
-  (let [advanced? (or (= optimizations :advanced))])
-
+  [{:keys [dist builds]} classpaths target]
   (run!
    (fn [build]
-     (utils/timed (str "CLJS (" (:id build) ")")
+     (utils/timed (str "CLJS " (:id build))
       (cljs.build.api/build (:source-paths build)
                             (:compiler build))))
    (eduction
     (map #(-> %
-              (update-in [:compiler :output-dir] (partial utils/ensure-relative-path target))
               (update-in [:compiler :output-to] (partial utils/ensure-relative-path target))
-              (update-in [:compiler :optimizations] (fn [current given] (or given current :none)) optimizations)
+              (update-in [:compiler :output-dir] (partial utils/ensure-relative-path (if dist "out" target)))
+              (update-in [:compiler :optimizations] (fn [current given] (or given current :none)) (when dist :advanced))
               (as-> conf
                   (utils/dissoc-maybe conf [:compiler :preloads] (= (-> conf :compiler :optimizations) :advanced)))))
     builds)))

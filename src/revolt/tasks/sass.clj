@@ -6,18 +6,15 @@
             [revolt.utils :as utils])
   (:import  (java.io File)))
 
-
 (defn invoke
-  [input roots classpaths target]
+  [{:keys [resources options]} classpaths target]
   (run!
-   (fn [[input-file relative-path]]
-     (utils/timed (str "SASS " (last (.split (.getFile input-file) File/separator)))
+   (fn [[resource relative-path]]
+     (utils/timed (str "SASS " relative-path)
       (sass/sass-compile-to-file
-       input-file
+       resource
        (io/file target (str/replace relative-path #"\.scss$" ".css"))
-       {})))
+       options)))
    (eduction
     (map (juxt io/resource identity))
-    (or (when-let [path (and input (.toPath input))]
-          (seq (filter #(.endsWith path %) roots)))
-        roots))))
+    resources)))

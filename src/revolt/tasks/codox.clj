@@ -9,4 +9,7 @@
      (-> ctx
          (select-keys [:name :group :version :description])
          (merge opts)
-         (assoc :output-path target-path)))))
+         (assoc :output-path target-path)))
+
+    ;; return location of generated docs
+    {:codox target-path}))
