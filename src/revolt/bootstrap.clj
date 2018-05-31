@@ -11,8 +11,7 @@
 (defprotocol PluginContext
   (classpaths [this]   "Returns project classpaths.")
   (target-dir [this]   "Returns a project target directory.")
-  (config-val [this k] "Returns a value from configuration map.")
-  (terminate  [this]   "Sends a signal to deactivate all plugins."))
+  (config-val [this k] "Returns a value from configuration map."))
 
 
 (defonce context (atom {}))
@@ -44,7 +43,9 @@
      #(= target-path (.toPath %))
      (classpath/classpath-directories))))
 
-(defn shutdown [plugins returns]
+(defn shutdown
+  "Deactivates all the plugins and terminates JVM."
+  [plugins returns]
   (doseq [p plugins]
     (.deactivate p (get @returns p)))
   (System/exit 0))
@@ -64,8 +65,10 @@
             app-ctx  (reify PluginContext
                        (classpaths [this] cpaths)
                        (target-dir [this] target)
-                       (config-val [this k] (k config-edn))
-                       (terminate  [this] (shutdown plugins returns)))]
+                       (config-val [this k] (k config-edn)))]
+
+        ;; redefine terminating function called to immediately terminate all the plugins
+        (alter-var-root #'shutdown (fn [f] (partial f plugins returns)))
 
         ;; set global application context
         (reset! context app-ctx)

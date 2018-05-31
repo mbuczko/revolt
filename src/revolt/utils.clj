@@ -1,5 +1,6 @@
 (ns revolt.utils
-  (:require [clojure.edn :as edn]
+  (:require [io.aviso.ansi]
+            [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as log])
@@ -53,9 +54,11 @@
     m))
 
 (defmacro timed
-  "Evaluates expr and prints the time it took.  Returns the value of expr."
+  "Evaluates expr and prints the time it took. Returns the value of expr."
   [task expr]
-  `(let [start# (. System (nanoTime))
-         ret# ~expr]
-     (println (format "%s => elapsed time: %.2f secs" ~task (/ (double (- (. System (nanoTime)) start#)) 1000000000.0)))
-     ret#))
+  `(do
+     (println (io.aviso.ansi/green ~task))
+     (let [start# (. System (nanoTime))
+          ret# ~expr]
+      (println (format "=> elapsed time: %.2f secs" (/ (double (- (. System (nanoTime)) start#)) 1000000000.0)))
+      ret#)))

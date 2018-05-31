@@ -3,6 +3,7 @@
             [clojure.tools.logging :as log]
             [rebel-readline.clojure.main]
             [rebel-readline.core]
+            [revolt.bootstrap]
             [revolt.plugin :refer [Plugin create-plugin]]))
 
 (defn init-plugin
@@ -26,7 +27,7 @@
                         (log/error "Please correct it, and enter (fixed!) to resume development."))))))))
 
       ;; enforce global annihilation
-      (.terminate ctx))
+      (revolt.bootstrap/shutdown))
 
     (deactivate [this ret]
       (log/debug "closing rebel"))))

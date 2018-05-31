@@ -93,8 +93,7 @@ Each plugin gets a _context_ during activation phase. Context contains all the c
     (defprotocol PluginContext
       (classpaths [this]   "Returns project classpaths.")
       (target-dir [this]   "Returns a project target directory.")
-      (config-val [this k] "Returns a value from configuration map.")
-      (terminate  [this]   "A function which sends a signal to deactivate all plugins."))
+      (config-val [this k] "Returns a value from configuration map."))
 ```
 
 Some of plugins have no dependencies (eg. _nrepl_ or _rebel_), some depend on specific tasks, eg. _figwheel_ plugin depends
