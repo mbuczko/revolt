@@ -1,7 +1,7 @@
 {:paths ["src"]
  :deps {org.clojure/tools.cli {:mvn/version"0.3.5"}
         org.clojure/java.classpath {:mvn/version "0.2.3"}
-        org.clojure/tools.deps.alpha {:mvn/version "0.5.435"}
+        org.clojure/tools.deps.alpha {:mvn/version "0.5.435" :exclusions [org.slf4j/slf4j-nop]}
         net.sf.jpathwatch/jpathwatch {:mvn/version "0.95"}
         io.aviso/pretty {:mvn/version "0.1.34"}
         deraen/sass4clj {:mvn/version "0.3.1"}

@@ -40,8 +40,8 @@ and a few built-in tasks:
 - [x] info - project info (name, description, package, version, git branch, sha...)
 - [ ] lint - linter based on [eastwood](https://github.com/jonase/eastwood)
 - [ ] analyse - static code analyzer based on [kibit](https://github.com/jonase/kibit)
-- [ ] uberjar - [onejar](http://one-jar.sourceforge.net/) packaging from JUXT's [pack.alpha](https://github.com/juxt/pack.alpha)
-- [x] capsule - [capsule](http://www.capsule.io) packaging from JUXT's [pack.alpha](https://github.com/juxt/pack.alpha)
+- [ ] uberjar - [onejar](http://one-jar.sourceforge.net/) packaging
+- [x] capsule - [capsule](http://www.capsule.io) packaging
 - [ ] ancient - looking for outdated dependencies
 - [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
 

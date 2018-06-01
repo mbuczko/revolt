@@ -17,11 +17,11 @@
   (reify Plugin
     (activate [this ctx]
       (log/debug "Starting filesystem watcher")
-      (let [excludes    (utils/gather-paths excluded-paths)
-            explicit    (utils/gather-paths explicit-paths)
-            filesystem  (java.nio.file.FileSystems/getDefault)
-            current-dir (.toAbsolutePath (.getPath filesystem "" (make-array String 0)))
-            classpaths  (or (seq (map #(.toFile %) explicit))
+      (let [excludes   (utils/gather-paths excluded-paths)
+            explicit   (utils/gather-paths explicit-paths)
+            filesystem (java.nio.file.FileSystems/getDefault)
+            root-dir   (utils/current-dir filesystem)
+            classpaths (or (seq (map #(.toFile %) explicit))
                             (remove
                              #(contains? excludes (.toPath %))
                              (.classpaths ctx)))
@@ -37,7 +37,7 @@
         (apply watcher/watch-files
                (conj classpaths
                      (fn [{:keys [file]}]
-                       (let [path (.relativize current-dir (.toPath file))]
+                       (let [path (.relativize root-dir (.toPath file))]
                          (doseq [[matcher task] matchers]
                            (when (.matches matcher path)
                              (if task

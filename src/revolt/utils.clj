@@ -16,6 +16,12 @@
                   .toAbsolutePath)
              paths)))
 
+(defn current-dir
+  ([]
+   (current-dir (java.nio.file.FileSystems/getDefault)))
+  ([^java.nio.file.FileSystem fs]
+   (.toAbsolutePath (.getPath fs "" (make-array String 0)))))
+
 (defn ensure-ns
   "Ensures that a string, to be later transformed to a namespaced keyword,
   contains a namespace part. In case there is no namespace - a default one
@@ -31,6 +37,11 @@
   ([target path]
    (when path
      (.toString (Paths/get target (.split path File/separator))))))
+
+(defn ensure-absolute-path
+  [relative-path]
+  (when-let [root-dir (.toString (current-dir))]
+    (.toString (Paths/get root-dir (into-array [relative-path])))))
 
 (defn build-params-list
   [input-params kw]
