@@ -56,13 +56,21 @@
       (log/debug "No project information found in" path))))
 
 (defn dissoc-maybe
-  "Dissocs a nested key described by vector v when given predicate is true."
-  [m v pred]
+  "Dissocs nested key from a map when given predicate is true."
+  [m k pred]
   (if pred
-    (if-let [nav (seq (pop v))]
-      (update-in m nav dissoc (last v))
-      (dissoc m (first v)))
+    (if-let [nav (seq (pop k))]
+      (update-in m nav dissoc (last k))
+      (dissoc m (first k)))
     m))
+
+(defn assoc-tuple-merging
+  [tuples k v]
+  (if-let [tuple-string (get (into {} tuples) k)]
+    (let [tuple-values (into #{} (.split tuple-string " "))]
+      (-> (filter #(not= (first %) k) tuples)
+          (conj [k (str/join " " (into tuple-values v))])))
+    (conj tuples [k (str/join " " v)])))
 
 (defmacro timed
   "Evaluates expr and prints the time it took. Returns the value of expr."
