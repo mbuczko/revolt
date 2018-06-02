@@ -40,7 +40,7 @@
 
 (defn ensure-absolute-path
   [relative-path]
-  (when-let [root-dir (.toString (current-dir))]
+  (when-let [root-dir (and relative-path (.toString (current-dir)))]
     (.toString (Paths/get root-dir (into-array [relative-path])))))
 
 (defn build-params-list

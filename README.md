@@ -36,6 +36,7 @@ and a few built-in tasks:
 
 - [x] scss - transforms scss files into css
 - [x] cljs - a cljs compiler
+- [x] aot - ahead-of-time compilation
 - [x] test - clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
 - [x] info - project info (name, description, package, version, git branch, sha...)
 - [ ] lint - linter based on [eastwood](https://github.com/jonase/eastwood)

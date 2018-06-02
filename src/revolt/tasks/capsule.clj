@@ -21,8 +21,6 @@
                              :java-version "Java-Version"
                              :jdk-required? "JDK-Required"
                              :jvm-args "JVM-Args"
-                             :args "Args"
-                             :main "Application-Class"
                              :environment-variables "Environment-Variables"
                              :system-properties "System-Properties"
                              :security-manager "Security-Manager"
@@ -69,12 +67,12 @@
           scripts))
 
 (defn- reduce-config
-  [config]
+  [initial config]
   (reduce (fn [parameters k]
             (if-let [param (k capsule-params)]
               (conj parameters [param (k config)])
               parameters))
-          []
+          initial
           (keys config)))
 
 (defn- resolve-sibling-paths
@@ -89,8 +87,11 @@
 (defn config->manifest
   "Converts task parameters to capsule manifest tuples."
 
-  [{:keys [caplets scripts] :as config}]
-  (-> (reduce-config config)
+  [{:keys [caplets scripts main group args] :as config}]
+  (-> [["Application-Class" "clojure.main"]
+       ["Premain-Class" capsule-default-name]
+       ["Args" (str "-m " main " " args)]]
+      (reduce-config config)
       (cond-> caplets
         (reduce-caplets caplets))
       (cond-> scripts
@@ -103,7 +104,7 @@
   `relative-path` is relative to dir itself."
 
   [dir]
-  (let [root-path (.toPath dir)]
+  (let [root-path  (.toPath dir)]
     (->> (file-seq dir)
          (map io/file)
          (filter (memfn isFile))
@@ -138,7 +139,6 @@
         attributes (.getMainAttributes manifest)]
     (.put attributes Attributes$Name/MANIFEST_VERSION "1.0")
     (.put attributes Attributes$Name/MAIN_CLASS capsule-default-name)
-    (.put attributes (Attributes$Name. "Premain-Class") capsule-default-name)
     (doseq [[k v] manifest-tuples]
       (.put attributes (Attributes$Name. k) v))
     (let [baos (ByteArrayOutputStream.)]
@@ -195,12 +195,13 @@
     (add-to-jar (.getName dep) dep jar-stream))
   jar-stream)
 
-(defn add-folders
-  [^JarOutputStream jar-stream classpaths]
+(defn add-paths
+  [^JarOutputStream jar-stream classpaths aot?]
   (doseq [[file name] (->> classpaths
                            (map io/file)
                            (filter (memfn isDirectory))
-                           (mapcat dir->relative-entries))]
+                           (mapcat dir->relative-entries))
+          :when (not (and aot? (.endsWith name ".clj")))]
     (add-to-jar name file jar-stream))
   jar-stream)
 
@@ -226,10 +227,11 @@
         ;; return untouched manifest by default
         manifest))))
 
+
 (defn build-jar
   "Builds a jar which is essentially a capsule of preconfigured type."
 
-  [^JarOutputStream jar-stream classpath deps manifest caplets capsule-type]
+  [^JarOutputStream jar-stream classpath deps manifest caplets capsule-type aot?]
   (let [classpaths (str/split classpath (re-pattern File/pathSeparator))]
     (-> jar-stream
         (add-manifest (ensure-runtime-deps manifest deps capsule-type))
@@ -240,7 +242,7 @@
         ;; :thin capsule has only application dependecies included.
 
         (cond-> (not= capsule-type :empty)
-          (add-folders classpaths))
+          (add-paths classpaths aot?))
 
         ;; :fat capsule has all dependecies included.
         ;; it's simply self-contained uberjar.
@@ -269,7 +271,9 @@
         classpath (tools.deps/make-classpath
                    (tools.deps/resolve-deps deps-map nil)
                    (resolve-sibling-paths (:paths deps-map) deps-path)
-                   {:extra-paths (conj [(utils/ensure-absolute-path target)] extra-paths)})
+                   {:extra-paths (->> [target extra-paths]
+                                      (map utils/ensure-absolute-path)
+                                      (filter (complement nil?)))})
         jar-file  (io/file output-jar)]
 
     ;; ensure that all directories in a path are created
@@ -283,7 +287,8 @@
                     (:deps deps-map)
                     (config->manifest input)
                     (into #{} (keys (:caplets input)))
-                    :thin)
+                    :thin
+                    (:aot? ctx))
 
          (catch Throwable t
            (log/errorf "Error while creating a jar file: %s" (.getMessage t))))

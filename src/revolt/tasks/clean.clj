@@ -12,5 +12,6 @@
 
 (defn invoke
   [input target]
-  (utils/timed "CLEAN"
-   (delete-files-recursively target true)))
+  (utils/timed (str "CLEAN " target)
+   (doseq [dir [target "out"]]
+     (delete-files-recursively dir true))))

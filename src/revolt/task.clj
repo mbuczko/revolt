@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [revolt.utils :as utils]
             [revolt.bootstrap :as bootstrap]
+            [revolt.tasks.aot :as aot]
             [revolt.tasks.cljs :as cljs]
             [revolt.tasks.sass :as sass]
             [revolt.tasks.test :as test]
@@ -144,3 +145,8 @@
   (reify Task
     (invoke [this input ctx]
       (merge ctx (capsule/invoke (merge opts input) ctx target)))))
+
+(defmethod create-task ::aot [_ opts classpaths target]
+  (reify Task
+    (invoke [this input ctx]
+      (merge ctx (aot/invoke (merge opts input) ctx classpaths target)))))
