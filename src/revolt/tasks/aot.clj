@@ -1,12 +1,13 @@
 (ns revolt.tasks.aot
   (:require [clojure.tools.namespace.find :as tnfind]
             [revolt.utils :as utils]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log]))
 
 (defn compile-namespaces
   [namespaces]
   (doseq [namespace namespaces]
-    (println "aot" namespace)
+    (log/debug "aot" namespace)
     (compile namespace)))
 
 (defn invoke
