@@ -57,15 +57,15 @@ stops working when JVM shuts down. Nothing more than that. Technically, plugins 
 Typical configuration looks like following:
 
 ```clojure
-    {:revolt.plugin/nrepl {:port 5600}
-     :revolt.plugin/rebel {:init-ns "codocs.system"}
-     :revolt.plugin/watch {:excluded-paths ["src/clj" "resources"]
-                           :on-change {:revolt.task/sass "glob:**/assets/styles/*.scss"}}}
+{:revolt.plugin/nrepl {:port 5600}
+ :revolt.plugin/rebel {:init-ns "codocs.system"}
+ :revolt.plugin/watch {:excluded-paths ["src/clj" "resources"]
+                       :on-change {:revolt.task/sass "glob:**/assets/styles/*.scss"}}}
 ```
 After activation plugins usually stay in a separate thread until deactivation phase which happens when JVM shuts down, ie. when plugin running in a main thread
 (like `rebel` or `nrepl`) gets interrupted.
 
-Plugins love to delegate their job down to someone else, as all those bad guys do. In our cruel world these are _Tasks_ who handle most of ungrateful work on behalf of Master Plugins.
+Plugins love to delegate their job down to someone else, as all those bad guys do. In our cruel world these are _tasks_ who handle most of ungrateful work on behalf of Master Plugins.
 As an example: `watch` plugin observes changes in a filesytem and calls a `sass` task when *.scss file is altered. Or sneaky `figwheel` plugin delegates its job to `cljs` task when
 some clojurescript source changes. Sometimes, just like in a `figwheel` example task _has_ to be explicitly configured to have plugin working, in other words task becomes a plugin's
 dependency and you will see a lot of cry and complain when such a dependency is not configured correctly.
@@ -88,7 +88,7 @@ We can express it as a composition:
 Or in a bit more clojurey way:
 
 ``` clojure
-    (def build (comp capsule cljs sass info clean))
+(def build (comp capsule cljs sass info clean))
 ```
 
 This way calling a `build` composition will clean a target directory, generate project information (name, group, version, git sha...), generate css-es and finally pack everything into an uberjar
@@ -98,61 +98,61 @@ passed down to `capsule` which makes use of these bits to generate a correct pac
 To have even more fun, each task can be pre-configured in a very similar way as plugins are:
 
 ``` clojure
-    :revolt.task/info  {:name "foo"
-                        :group "bar.bazz"
-                        :version "0.0.1"
-                        :description "My awesome project"}
+:revolt.task/info  {:name "foo"
+                    :group "bar.bazz"
+                    :version "0.0.1"
+                    :description "My awesome project"}
 
-    :revolt.task/test  {:report :pretty}
+:revolt.task/test  {:report :pretty}
 
-    :revolt.task/sass  {:resources ["styles/main.scss" "styles/login.scss"]}
+:revolt.task/sass  {:resources ["styles/main.scss" "styles/login.scss"]}
 
-    :revolt.task/codox {:source-paths ["src/clj"]
-                        :source-uri "http://github.com/fuser/foo/blob/{version}/{filepath}#L{line}"
-                        :namespaces [foo.main foo.core]}
+:revolt.task/codox {:source-paths ["src/clj"]
+                    :source-uri "http://github.com/fuser/foo/blob/{version}/{filepath}#L{line}"
+                    :namespaces [foo.main foo.core]}
 
-    :revolt.task/cljs  {:builds [{:id "main-ui"
-                                  :figwheel true
-                                  :source-paths ["src/cljs"]
-                                  :compiler {:main "foo.main"
-                                             :output-to "scripts/main.js"
-                                             :output-dir "scripts/out"
-                                             :asset-path "/scripts/core"
-                                             :preloads [devtools.preload]}}]}
+:revolt.task/cljs  {:builds [{:id "main-ui"
+                              :figwheel true
+                              :source-paths ["src/cljs"]
+                              :compiler {:main "foo.main"
+                                         :output-to "scripts/main.js"
+                                         :output-dir "scripts/out"
+                                         :asset-path "/scripts/core"
+                                         :preloads [devtools.preload]}}]}
 
-    :revolt.task/capsule {:exclude-paths #{"test" "src/cljs"}
-                          :output-jar "dist/foo.jar"
-                          :capsule-type :fat
-                          :main "foo.main"
-                          :min-java-version "1.8.0"
-                          :jvm-args "-server"
-                          :caplets {"MavenCapsule" [["Repositories" "central clojars(https://repo.clojars.org/)"]
-                                                    ["Allow-Snapshots" "true"]]}}
+:revolt.task/capsule {:exclude-paths #{"test" "src/cljs"}
+                      :output-jar "dist/foo.jar"
+                      :capsule-type :fat
+                      :main "foo.main"
+                      :min-java-version "1.8.0"
+                      :jvm-args "-server"
+                      :caplets {"MavenCapsule" [["Repositories" "central clojars(https://repo.clojars.org/)"]
+                                                ["Allow-Snapshots" "true"]]}}
 ```
 
 Having tasks configured doesn't mean they're sealed and we can't bend them to our needs any more. Let's look at the `info` task as an example - it stores in a context its entire configuration map
 (:name, :group and so on) merged with relevant git information (branch, tag...), but as all other tasks this one also accepts an argument - an input map which is merged into already existing configuration:
 
 ``` clojure
-    (info {:environment :testing})
-    => {:name "foo", :group "bar.bazz", :version "0.0.1", :description "My awesome project", :environment :testing}
+(info {:environment :testing})
+=> {:name "foo", :group "bar.bazz", :version "0.0.1", :description "My awesome project", :environment :testing}
 ```
 
 Obviously we can provide an argument in a composition too:
 
 ``` clojure
-    (def build (comp capsule cljs sass (partial info {:environment :testing}) clean))
+(def build (comp capsule cljs sass (partial info {:environment :testing}) clean))
 ```
 
 Why this is so cool? Because this way we can play with our builds and packaging in a REPL without changing a single line of base configuration. Eg. to generate a thin package with an optimized
 version of our clojurescripts, we can build a following pipeline:
 
 ``` clojure
-    (def build (comp (partial capsule {:capsule-type :thin})
-                     (partial cljs {:dist true})
-                     sass
-                     info
-                     clean))
+(def build (comp (partial capsule {:capsule-type :thin})
+                 (partial cljs {:dist true})
+                 sass
+                 info
+                 clean))
 ```
 Alright, so we know already how tasks work. We know they modify and pass down a context in a composition chain, and they accept an argument which gets merged into their base configuration. 
 Now, how can we get these tasks into our hands?
@@ -160,30 +160,30 @@ Now, how can we get these tasks into our hands?
 Well, quite easy. As you remember tasks are denoted by qualified keywords, like `:revolt.task/capsule`. All we need is now to _require_ a task:
 
 ``` clojure
-    (require '[revolt.task :as t])  ;; we need a task namespace first
-    (t/require-task ::t/capsule)    ;; now we can require specific task
+(require '[revolt.task :as t])  ;; we need a task namespace first
+(t/require-task ::t/capsule)    ;; now we can require specific task
 
-    (capsule)                       ;; task has been interned into current namespace
-    => {:uberjar "dist/foo.jar"}
+(capsule)                       ;; task has been interned into current namespace
+=> {:uberjar "dist/foo.jar"}
 ```
 
 Indeed, `require-task` is a macro which does the magic, it loads and interns into current namespace required task. It's also possible to intern a task with different name:
 
 ``` clojure
-    (t/require-task ::t/capsule :as caps)  ;; note the ":as caps" here
+(t/require-task ::t/capsule :as caps)  ;; note the ":as caps" here
 
-    (caps)
-    => {:uberjar "dist/foo.jar"}
+(caps)
+=> {:uberjar "dist/foo.jar"}
 ```
 
 or to save unnecessary typing and load a bunch of tasks at once with `require-all` macro:
 
 ``` clojure
-    (t/require-all [::t/clean ::t/cljs ::t/sass ::t/capsule ::t/aot ::t/info])
-    (def build (comp capsule cljs sass info clean))
+(t/require-all [::t/clean ::t/cljs ::t/sass ::t/capsule ::t/aot ::t/info])
+(def build (comp capsule cljs sass info clean))
 
-    (build)
-    { context gets returned here }
+(build)
+{ context gets returned here }
 ```
 
 `require-task` and `require-all` are simple ways to dynamically load tasks we want to play with and by chance turn our REPLs into training ground where all tasks are impatiently waiting to be
