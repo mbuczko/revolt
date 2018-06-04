@@ -31,8 +31,7 @@
                              :dependencies "Dependencies"
                              :native-dependencies "Native-Dependencies"
                              :capsule-log-level "Capsule-Log-Level"
-                             :version "Application-Version"
-                             :group "Application-ID"})
+                             :version "Application-Version"})
 
 (defn filter-paths
   [paths to-exclude]
@@ -84,13 +83,16 @@
              (map (memfn getFile)
                   (.getURLs (URLClassLoader/getSystemClassLoader))))))
 
-(defn config->manifest
+(defn config->application-manifest
   "Converts task parameters to capsule manifest tuples."
 
-  [{:keys [caplets scripts main group args] :as config}]
+  [{:keys [caplets scripts main args] :as config} application version]
   (-> [["Application-Class" "clojure.main"]
+       ["Application-Version" version]
+       ["Application-ID" (str/replace application ":" ".")]
        ["Premain-Class" capsule-default-name]
        ["Args" (str "-m " main " " args)]]
+
       (reduce-config config)
       (cond-> caplets
         (reduce-caplets caplets))
@@ -104,10 +106,11 @@
   `relative-path` is relative to dir itself."
 
   [dir]
-  (let [root-path  (.toPath dir)]
+  (when-let [root-path (and (not= (.getName dir) "capsule") (.toPath dir))]
     (->> (file-seq dir)
          (map io/file)
          (filter (memfn isFile))
+         (filter #(not= (.getName %) ".DS_Store"))
          (map (juxt identity #(-> root-path
                                   (.relativize (.toPath %))
                                   (.toString)))))))
@@ -178,9 +181,9 @@
   [^JarOutputStream jar-stream caplets]
   (doseq [caplet (filter #(not= "MavenCapsule" %) caplets)]
     (let [[group artifact-id version] (.split caplet ":")
-          artifact (str (str/replace group #"\." "/") "/" artifact-id "/" version)]
+          clpath (str (str/replace group #"\." "/") "/" artifact-id "/" version)]
       (when-let [caplet-jar (->> (system-classpaths)
-                                 (filter #(.contains % artifact))
+                                 (filter #(.contains % clpath))
                                  (first)
                                  (io/file))]
         (add-to-jar (.getName caplet-jar) caplet-jar jar-stream))))
@@ -206,7 +209,7 @@
   jar-stream)
 
 (defn ensure-runtime-deps
-  [manifest deps capsule-type]
+  [application manifest deps capsule-type]
   (let [artifacts (->> deps
                        (map (fn [[dep coords]]
                               (when-let [version (:mvn/version coords)]
@@ -218,6 +221,10 @@
               (count deps))
       (throw (Exception. "Some of dependecies have no :mvn/version assigned!"))
       (condp = capsule-type
+        :empty
+        (-> manifest
+            (utils/assoc-tuple-merging "Application" #{application}))
+
         :thin
         (-> manifest
             (utils/assoc-tuple-merging "Caplets" #{"MavenCapsule"})
@@ -231,10 +238,10 @@
 (defn build-jar
   "Builds a jar which is essentially a capsule of preconfigured type."
 
-  [^JarOutputStream jar-stream classpath deps manifest caplets capsule-type aot?]
+  [^JarOutputStream jar-stream application classpath manifest deps caplets capsule-type aot?]
   (let [classpaths (str/split classpath (re-pattern File/pathSeparator))]
     (-> jar-stream
-        (add-manifest (ensure-runtime-deps manifest deps capsule-type))
+        (add-manifest (ensure-runtime-deps application manifest deps capsule-type))
         (add-capsule-class)
         (add-caplets-jars caplets)
 
@@ -260,38 +267,49 @@
 
 
 (defn invoke
-  [{:keys [exclude-paths extra-paths capsule-type output-jar] :as input} ctx target]
-  (let [deps-edn  (io/file "deps.edn")
-        deps-map  (-> deps-edn
-                      (tools.deps.reader/slurp-deps)
-                      (update :paths filter-paths exclude-paths)
-                      (assoc  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
-                                          "clojars" {:url "https://repo.clojars.org/"}}))
-        deps-path (.. deps-edn toPath toAbsolutePath)
-        classpath (tools.deps/make-classpath
-                   (tools.deps/resolve-deps deps-map nil)
-                   (resolve-sibling-paths (:paths deps-map) deps-path)
-                   {:extra-paths (->> [target extra-paths]
-                                      (map utils/ensure-absolute-path)
-                                      (filter (complement nil?)))})
-        jar-file  (io/file output-jar)]
+  [{:keys [exclude-paths extra-paths capsule-type output-jar name group version] :as config} ctx target]
 
-    ;; ensure that all directories in a path are created
-    (io/make-parents jar-file)
+  (let [artifact-id (:name ctx name)
+        group-id    (:group ctx group)
+        version     (:version ctx version)
+        caps-type   (or capsule-type :fat)]
 
-    (utils/timed "CAPSULE"
-     (with-open [jar-stream (JarOutputStream. (io/output-stream jar-file))]
-       (try
-         (build-jar jar-stream
-                    classpath
-                    (:deps deps-map)
-                    (config->manifest input)
-                    (into #{} (keys (:caplets input)))
-                    :thin
-                    (:aot? ctx))
+    (if-let [application (and artifact-id group-id (str group-id ":" artifact-id))]
+      (utils/timed
+       (str "CAPSULE " application ":" (or version "<missing version>") " (" caps-type ")")
+       (let [deps-edn  (io/file "deps.edn")
+             deps-map  (-> deps-edn
+                           (tools.deps.reader/slurp-deps)
+                           (update :paths filter-paths exclude-paths)
+                           (assoc  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
+                                               "clojars" {:url "https://repo.clojars.org/"}}))
+             deps-path (.. deps-edn toPath toAbsolutePath)
+             classpath (tools.deps/make-classpath
+                        (tools.deps/resolve-deps deps-map nil)
+                        (resolve-sibling-paths (:paths deps-map) deps-path)
+                        {:extra-paths (->> [target extra-paths]
+                                           (map utils/ensure-absolute-path)
+                                           (filter (complement nil?)))})
+             jar-file  (io/file output-jar)]
 
-         (catch Throwable t
-           (log/errorf "Error while creating a jar file: %s" (.getMessage t))))
+         ;; ensure that all directories in a path are created
+         (io/make-parents jar-file)
 
-       ;; return capsule location as a result
-       {:uberjar output-jar}))))
+         (with-open [jar-stream (JarOutputStream. (io/output-stream jar-file))]
+           (try
+             (build-jar jar-stream
+                        application
+                        classpath
+                        (config->application-manifest config application version)
+                        (:deps deps-map)
+                        (into #{} (keys (:caplets config)))
+                        caps-type
+                        (:aot? ctx))
+
+             (catch Throwable t
+               (log/errorf "Error while creating a jar file: %s" (.getMessage t))))
+
+           ;; return capsule location as a result
+           {:uberjar output-jar})))
+
+      (throw (Exception. "No 'name' or 'group' parameters provided in task configuration and context.")))))

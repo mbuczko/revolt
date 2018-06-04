@@ -8,7 +8,8 @@
   [{:keys [dist builds]} classpaths target]
   (run!
    (fn [build]
-     (utils/timed (str "CLJS " (:id build))
+     (utils/timed
+      (str "CLJS " (:id build))
       (cljs.build.api/build (:source-paths build)
                             (:compiler build))))
    (eduction

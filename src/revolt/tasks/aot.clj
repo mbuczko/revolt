@@ -16,7 +16,8 @@
   ;; ensure target is created
   (.mkdirs (io/file target))
 
-  (utils/timed "AOT"
+  (utils/timed
+   "AOT"
    (binding [*compile-path* target]
      (doseq [cp classpaths
              :when (.isDirectory cp)

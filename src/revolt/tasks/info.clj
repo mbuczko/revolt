@@ -8,9 +8,11 @@
   (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd HH:mm:ss"))
 
 (defn invoke [kv target]
-  (merge
-   {:sha (git rev-parse --short HEAD)
-    :tag (git describe --abbrev=0 --tags HEAD)
-    :branch (git rev-parse --abbrev-ref HEAD)
-    :timestamp (.format (java.time.LocalDateTime/now) datetime-formatter)}
-   kv))
+  (utils/timed
+   "INFO"
+   (merge
+    {:sha (git rev-parse --short HEAD)
+     :tag (git describe --abbrev=0 --tags HEAD)
+     :branch (git rev-parse --abbrev-ref HEAD)
+     :timestamp (.format (java.time.LocalDateTime/now) datetime-formatter)}
+    kv)))
