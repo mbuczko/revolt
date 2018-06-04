@@ -79,21 +79,21 @@ of built-in tasks ready to serve you and take care of building and packaging you
 
 To understand how tasks work, imagine them as a chain of dwarfs, each of them doing specific job and passing result to the next one:
 
-    (clean) -> (info) -> (sass) -> (cljs) -> (capsule)
+    clean ⇒ info ⇒ sass ⇒ cljs ⇒ capsule
 
-We can express it as a composition:
+which can expressed as a composition:
 
     (capsule (cljs (sass (info (clean)))))
 
-Or in a bit more clojurey way:
+or in a bit more clojurey way:
 
 ``` clojure
 (def build (comp capsule cljs sass info clean))
 ```
 
-This way calling a `build` composition will clean a target directory, generate project information (name, group, version, git sha...), generate css-es and finally pack everything into an uberjar
-(actually a (http://www.capsule.io/)[capsule]). Each of these tasks may generate intermediate result and pass it as a map to the next one in a `context`, eg. `info` task gathers project related information, which is at the end
-passed down to `capsule` which makes use of these bits to generate a correct package.
+This way calling a `build` composition will clean a target directory, generate project information (name, group, version, git sha...), generate css-es and finally pack everything into an uberjar 
+(a capsule actually). Each of these tasks may generate intermediate result and pass it as a map to the next one in a `context`, eg. `info` task gathers project related information which is at the end
+passed to `capsule` which in turn makes use of these bits to generate a correct package.
 
 To have even more fun, each task can be pre-configured in a very similar way as plugins are:
 
@@ -157,14 +157,14 @@ version of our clojurescripts, we can build a following pipeline:
 Alright, so we know already how tasks work. We know they modify and pass down a context in a composition chain, and they accept an argument which gets merged into their base configuration. 
 Now, how can we get these tasks into our hands?
 
-Well, quite easy. As you remember tasks are denoted by qualified keywords, like `:revolt.task/capsule`. All we need is now to _require_ a task:
+Well, quite easy. As you remember tasks are denoted by qualified keywords, like `:revolt.task/capsule`. All we need is now to _require-a-task_ :
 
 ``` clojure
 (require '[revolt.task :as t])  ;; we need a task namespace first
 (t/require-task ::t/capsule)    ;; now we can require specific task
 
 (capsule)                       ;; task has been interned into current namespace
-=> {:uberjar "dist/foo.jar"}
+⇒ {:uberjar "dist/foo.jar"}
 ```
 
 Indeed, `require-task` is a macro which does the magic, it loads and interns into current namespace required task. It's also possible to intern a task with different name:
@@ -173,7 +173,7 @@ Indeed, `require-task` is a macro which does the magic, it loads and interns int
 (t/require-task ::t/capsule :as caps)  ;; note the ":as caps" here
 
 (caps)
-=> {:uberjar "dist/foo.jar"}
+⇒ {:uberjar "dist/foo.jar"}
 ```
 
 or to save unnecessary typing and load a bunch of tasks at once with `require-all` macro:
@@ -183,7 +183,7 @@ or to save unnecessary typing and load a bunch of tasks at once with `require-al
 (def build (comp capsule cljs sass info clean))
 
 (build)
-{ context gets returned here }
+⇒ { final context is returned here }
 ```
 
 `require-task` and `require-all` are simple ways to dynamically load tasks we want to play with and by chance turn our REPLs into training ground where all tasks are impatiently waiting to be
@@ -194,7 +194,7 @@ used and abused :)
 
 Ok, so now having both plugins and tasks at our disposal, let's get back to the question how `clj` tool can make use of these toys. Clj comes with a nice mechanism of `aliases` which allow to specify at command line which parts of `deps.edn` configuration should be additionally taken into consideration. That's way more fascinating than it sounds at the beginning :)
 
-Having aliases means we can add specific dependencies and classpaths to our project, which is something that _revolt_ heavily bases on. Let's add few aliases which will group dependencies based on features we use during development time. Assuming we use clojurescript, nrepl and capsule for packaging, this is all we need in `deps.edn`: 
+Having aliases means we can add specific dependencies and classpaths to our project, which is something that _revolt_ heavily bases on. Let's add few aliases which will group dependencies based on features we use during development time. Assuming we use clojurescript, nrepl and capsule for packaging this is all we need in `deps.edn`: 
 
 ``` clojure
 {:aliases {:dev {:extra-paths ["target"]
@@ -218,7 +218,7 @@ Having aliases means we can add specific dependencies and classpaths to our proj
 
 Note the `:extra-paths` and `:main-opts`. First one declares additional paths - a _target_ directory in this case where certain tasks (eg. sass, cljs, aot) will generate their artifacts (CSSes, javascripts, compiled classes...). This location may be changed with extra parameter "-t" in `:main-opts`. 
 
-`:main-opts` on the other hand are the parameters that `clj` will use to bootstrap revolt: `-m revolt.bootstrap` instructs `clj` to use `revolt.bootstrap` namespace as a main class and pass rest of parameters over there. `-c revolt.edn` points at the revolt configuration file (can be omitted if it's named `revolt.edn`) and `-a nrepl,rebel` let's revolt to activate `revolt.plugin/nrepl` and `revolt.plugin/rebel` plugins (`revolt.plugin/` namespace may be omitted in case of built-in plugins).
+`:main-opts` on the other hand are the parameters that `clj` will use to bootstrap revolt: `-m revolt.bootstrap` instructs `clj` to use `revolt.bootstrap` namespace as a main class and pass rest of parameters over there. `-c revolt.edn` points at the revolt configuration file (can be omitted if it's named `revolt.edn`) and `-a nrepl,rebel` lets revolt to activate `revolt.plugin/nrepl` and `revolt.plugin/rebel` plugins (`revolt.plugin/` namespace may be omitted in case of built-in plugins).
 
 Now, the final touch. To launch a REPLs with rebel readline, nrepl and all the stuff necessary for clojurescripting and packaging:
 
@@ -227,7 +227,7 @@ Now, the final touch. To launch a REPLs with rebel readline, nrepl and all the s
 
 ## Development and more tech details
 
-This is to describe in details of how plugins and task are loaded and initialized and provide a simple guide to develop own ones.
+This is to describe in details of how plugins and task are loaded and initialized and provide a simple guide to develop own extensions.
 
 ### Plugins rediscovered
 
