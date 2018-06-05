@@ -14,5 +14,8 @@
   [input target]
   (utils/timed
    (str "CLEAN " target)
-   (doseq [dir [target "out"]]
-     (delete-files-recursively dir true))))
+   (do
+     (doseq [dir [target "out"]]
+       (delete-files-recursively dir true))
+
+     {:target-cleaned? true})))

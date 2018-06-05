@@ -60,7 +60,7 @@ Typical configuration looks like following:
 {:revolt.plugin/nrepl {:port 5600}
  :revolt.plugin/rebel {:init-ns "codocs.system"}
  :revolt.plugin/watch {:excluded-paths ["src/clj" "resources"]
-                       :on-change {:revolt.task/sass "glob:**/assets/styles/*.scss"}}}
+                       :on-change {:revolt.task/sass "glob:assets/styles/*.scss"}}}
 ```
 After activation plugins usually stay in a separate thread until deactivation phase which happens when JVM shuts down, ie. when plugin running in a main thread
 (like `rebel` or `nrepl`) gets interrupted.
@@ -130,12 +130,19 @@ To have even more fun, each task can be pre-configured in a very similar way as 
                                                 ["Allow-Snapshots" "true"]]}}
 ```
 
-Having tasks configured doesn't mean they're sealed and we can't bend them to our needs any more. Let's look at the `info` task as an example - it stores in a context its entire configuration map
-(:name, :group and so on) merged with relevant git information (branch, tag...), but as all other tasks this one also accepts an argument - an input map which is merged into already existing configuration:
+Let's talk about task arguments now.
+
+Having tasks configured doesn't mean they are sealed and we can't bend them to our needs any more. Let's look at the `sass` task as an example. Although it generates CSSes based on
+configured `:input-files`, as all other tasks this one also accepts an argument which can be one of following types:
+
+ - a symbol (eg. `(sass :describe)`) this type of arguments is automatically handled by _revolt_. As for now only `:describe` responds - returns a human readable description of given task.
+ - a `java.nio.file.Path` this type of arguments is also automatically handled by _revolt_ and is considered as a notification that particular file has changed and task should react upon. 
+ `sass` task uses path to filter already configured `:input-files` and rebuilds only a subset of SCSSes (if possible).
+ - a map. actually it's up to tasks how to handle incoming map argument, by convension _revolt_ simply merges incoming map into existing configuration:
 
 ``` clojure
 (info {:environment :testing})
-=> {:name "foo", :group "bar.bazz", :version "0.0.1", :description "My awesome project", :environment :testing}
+⇒ {:name "foo", :group "bar.bazz", :version "0.0.1", :description "My awesome project", :environment :testing}
 ```
 
 Obviously we can provide an argument in a composition too:

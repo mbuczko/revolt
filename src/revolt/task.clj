@@ -13,7 +13,9 @@
             [clojure.tools.logging :as log]))
 
 (defprotocol Task
-  (invoke [this input ctx] "Starts a task with provided input data and pipelined context."))
+  (invoke   [this input ctx] "Runs task with provided input data and pipelined context.")
+  (notify   [this path ctx]  "Handles notification with java.nio.file.Path typed argument.")
+  (describe [this]           "Returns human readable task description."))
 
 (defmulti create-task (fn [id opts classpaths target] id))
 
@@ -83,9 +85,24 @@
       (let [context-as-input? (= (type input) ::ContextMap)
             context-map (or context
                             (when context-as-input? input)
-                            ^{:type ::ContextMap} {})]
+                            ^{:type ::ContextMap} {})
+            input-argument  (when-not context-as-input? input)]
 
-        (.invoke task (when-not context-as-input? input) context-map)))))
+        (cond
+
+          ;; handle special arguments (symbols)
+          (keyword? input-argument)
+          (condp = input-argument
+            :describe
+            (.describe task)
+            (throw (Exception. "Symbol parameter not recognized by task.")))
+
+          ;; handle notifications
+          (instance? java.nio.file.Path input-argument)
+          (.notify task input-argument context-map)
+
+          :else
+          (.invoke task input-argument context-map))))))
 
 (def require-task-cached (memoize require-task*))
 
@@ -105,48 +122,78 @@
 (defmethod create-task ::clean [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (clean/invoke input target)
-      ctx)))
+      (merge ctx (clean/invoke input target)))
+    (describe [this]
+      "target directory cleaner")))
 
 (defmethod create-task ::sass [_ opts classpaths target]
-  (letfn [(filter-resources [resources path]
-            (filter #(or (nil? path) (.endsWith path %)) resources))]
+  (reify Task
+    (invoke [this input ctx]
+      (sass/invoke (if (map? input)
+                     (merge opts input)
 
-    (reify Task
-      (invoke [this input ctx]
-        (sass/invoke (or (when (map? input) (merge opts input))
-                         (update opts :resources filter-resources input))
-                     classpaths
-                     target)
-        ctx))))
+                     ;; this is to filter configured :input-files by an input parameter (a Path).
+                     ;; if filtered list is empty it means all configured :input-files should be
+                     ;; recompiled. Otherwise only input-files left should be considered.
+
+                     (update opts
+                           :input-files
+                           (fn [input-files path]
+                             (or (seq (filter #(or (nil? path) (= path %)) input-files))
+                                 input-files))
+                           input))
+
+                   classpaths
+                   target)
+      ctx)
+    (notify [this path ctx]
+      (.invoke this (.toString path) ctx))
+    (describe [this]
+      "SASS compiler")))
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (cljs/invoke (merge opts input) classpaths target)))))
+      (merge ctx (cljs/invoke (merge opts input) classpaths target)))
+    (notify [this path ctx]
+      (.invoke this path ctx))
+    (describe [this]
+      "CLJS compiler")))
 
 (defmethod create-task ::test [_ opts classpaths target]
   (let [options (merge test/default-options opts)]
     (reify Task
       (invoke [this input ctx]
-        (merge ctx (test/invoke (merge options input)))))))
+        (merge ctx (test/invoke (merge options input))))
+      (notify [this path ctx]
+        (.invoke this path ctx))
+      (describe [this]
+        "clojure.test runner"))))
 
 (defmethod create-task ::codox [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (codox/invoke (merge opts input) ctx target)))))
+      (merge ctx (codox/invoke (merge opts input) ctx target)))
+    (describe [this]
+      "API doc generator")))
 
 (defmethod create-task ::info [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (info/invoke (merge opts input) target)))))
+      (merge ctx (info/invoke (merge opts input) target)))
+    (describe [this]
+      "project info generator")))
 
 (defmethod create-task ::capsule [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (capsule/invoke (merge opts input) ctx target)))))
+      (merge ctx (capsule/invoke (merge opts input) ctx target)))
+    (describe [this]
+      "capsule packager")))
 
 (defmethod create-task ::aot [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (aot/invoke (merge opts input) ctx classpaths target)))))
+      (merge ctx (aot/invoke (merge opts input) ctx classpaths target)))
+    (describe [this]
+      "ahead-of-time compilation")))

@@ -287,8 +287,7 @@
              classpath (tools.deps/make-classpath
                         (tools.deps/resolve-deps deps-map nil)
                         (resolve-sibling-paths (:paths deps-map) deps-path)
-                        {:extra-paths (->> [target extra-paths]
-                                           (map utils/ensure-absolute-path)
+                        {:extra-paths (->> (map utils/ensure-absolute-path extra-paths)
                                            (filter (complement nil?)))})
              jar-file  (io/file output-jar)]
 

@@ -40,9 +40,11 @@
                        (let [path (.relativize root-dir (.toPath file))]
                          (doseq [[matcher task] matchers]
                            (when (.matches matcher path)
-                             (if task
-                               (task path)
-                               (log/errorf "No task %s found to react on change of: %s" task path))))))))))
+                             (if-not task
+                               (log/errorf "No task %s found to react on change of: %s" task path)
+                               (do
+                                 (log/debugf "changed: %s (=> %s)" path (task :describe))
+                                 (task path)))))))))))
 
     (deactivate [this ret]
       (log/debug "closing watcher")

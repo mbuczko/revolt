@@ -15,6 +15,7 @@
 
 
 (defonce context (atom {}))
+(defonce status  (atom :not-initialized))
 
 (def cli-options
   [["-c" "--config EDN" "EDN resource with revolt configuration."
@@ -44,11 +45,10 @@
      (classpath/classpath-directories))))
 
 (defn shutdown
-  "Deactivates all the plugins and terminates JVM."
+  "Deactivates all the plugins."
   [plugins returns]
   (doseq [p plugins]
-    (.deactivate p (get @returns p)))
-  (System/exit 0))
+    (.deactivate p (get @returns p))))
 
 (defn -main
   [& args]
@@ -67,8 +67,17 @@
                        (target-dir [this] target)
                        (config-val [this k] (k config-edn)))]
 
-        ;; redefine terminating function called to immediately terminate all the plugins
-        (alter-var-root #'shutdown (fn [f] (partial f plugins returns)))
+        (add-watch status :status-watcher
+                   (fn [key reference old-state new-state]
+                     (log/debug "session" new-state)
+                     (when (= new-state :terminated)
+                       (.halt (Runtime/getRuntime) 0))))
+
+        ;; register a shutdown hook to be able to deactivate plugins
+        (.addShutdownHook (Runtime/getRuntime)
+                          (Thread. #(do
+                                      (shutdown plugins returns)
+                                      (reset! status :terminated))))
 
         ;; set global application context
         (reset! context app-ctx)
@@ -76,6 +85,9 @@
         ;; activate all the plugins sequentially one after another
         (doseq [p plugins]
           (when-let [ret (.activate p @context)]
-            (swap! returns conj {p ret}))))
+            (swap! returns conj {p ret})))
+
+        ;; set global application context
+        (reset! status :initialized))
 
       (log/error "Configuration not found."))))

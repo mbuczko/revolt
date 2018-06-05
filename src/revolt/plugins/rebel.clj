@@ -23,11 +23,10 @@
                       (in-ns ns-sym)
 
                       (catch Exception e
-                        (log/error "Failed to require dev, this usually means there was a syntax error." (.getMessage e))
-                        (log/error "Please correct it, and enter (fixed!) to resume development."))))))))
+                        (log/error "Failed to require dev, this usually means there was a syntax error." (.getMessage e)))))))))
 
       ;; enforce global annihilation
-      (revolt.bootstrap/shutdown))
+      (System/exit 0))
 
     (deactivate [this ret]
       (log/debug "closing rebel"))))
