@@ -91,7 +91,7 @@ or in a bit more clojurey way:
 (def build (comp capsule cljs sass info clean))
 ```
 
-This way calling a `build` composition will clean a target directory, generate project information (name, group, version, git sha...), generate css-es and finally pack everything into an uberjar 
+This way calling a `build` composition will clean a target directory, generate project information (name, group, version, git sha...), generate CSSes and finally pack everything into an uberjar 
 (a capsule actually). Each of these tasks may generate intermediate result and pass it as a map to the next one in a `context`, eg. `info` task gathers project related information which is at the end
 passed to `capsule` which in turn makes use of these bits to generate a correct package.
 
@@ -135,10 +135,10 @@ Let's talk about task arguments now.
 Having tasks configured doesn't mean they are sealed and we can't bend them to our needs any more. Let's look at the `sass` task as an example. Although it generates CSSes based on
 configured `:input-files`, as all other tasks this one also accepts an argument which can be one of following types:
 
- - a symbol (eg. `(sass :describe)`) this type of arguments is automatically handled by _revolt_. As for now only `:describe` responds - returns a human readable description of given task.
- - a `java.nio.file.Path` this type of arguments is also automatically handled by _revolt_ and is considered as a notification that particular file has changed and task should react upon. 
+ - A keyword. This type of arguments is automatically handled by _revolt_. As for now only `:describe` responds - returns a human readable description of given task.
+ - A `java.nio.file.Path`. This type of arguments is also automatically handled by _revolt_ and is considered as a notification that particular file has changed and task should react upon. 
  `sass` task uses path to filter already configured `:input-files` and rebuilds only a subset of SCSSes (if possible).
- - a map. actually it's up to tasks how to handle incoming map argument, by convension _revolt_ simply merges incoming map into existing configuration:
+ - A map. Actually it's up to tasks how to handle incoming map argument, by convension _revolt_ simply merges incoming map into existing configuration:
 
 ``` clojure
 (info {:environment :testing})
