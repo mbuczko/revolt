@@ -74,7 +74,7 @@ Ok, but how to specify which plugins do we want to activate? This is where `clj`
 
 ## Tasks
 
-If we call plugins as "bad guys", tasks are definitely the opposite - kind of little dwarfs who are specialized to do one job and do it well. And similar to plugins, there is a bunch
+If we called plugins as "bad guys", tasks are definitely the opposite - kind of little dwarfs who are specialized to do one job and do it well. And similar to plugins, there is a bunch
 of built-in tasks ready to serve you and take care of building and packaging your application. Oh, and they can generate documentation too.
 
 To understand how tasks work, imagine them as a chain of dwarfs, each of them doing specific job and passing result to the next one:
@@ -136,7 +136,7 @@ Having tasks configured doesn't mean they are sealed and we can't bend them to o
 configured `:input-files`, as all other tasks this one also accepts an argument which can be one of following types:
 
  - A keyword. This type of arguments is automatically handled by _revolt_. As for now only `:describe` responds - returns a human readable description of given task.
- - A `java.nio.file.Path`. This type of arguments is also automatically handled by _revolt_ and is considered as a notification that particular file has changed and task should react upon. 
+ - A `java.nio.file.Path`. This type of arguments is also automatically handled by _revolt_ and is considered as a notification that particular file has been changed and task should react upon. 
  `sass` task uses path to filter already configured `:input-files` and rebuilds only a subset of SCSSes (if possible).
  - A map. Actually it's up to tasks how to handle incoming map argument, by convension _revolt_ simply merges incoming map into existing configuration:
 
@@ -161,7 +161,7 @@ version of our clojurescripts, we can build a following pipeline:
                  info
                  clean))
 ```
-Alright, so we know already how tasks work. We know they modify and pass down a context in a composition chain, and they accept an argument which gets merged into their base configuration. 
+Alright, so we know already how tasks work. We know they modify and pass down a context in a composition chain, and they accept an argument which can be merged into their base configuration. 
 Now, how can we get these tasks into our hands?
 
 Well, quite easy. As you remember tasks are denoted by qualified keywords, like `:revolt.task/capsule`. All we need is now to _require-a-task_ :
@@ -204,8 +204,7 @@ Ok, so now having both plugins and tasks at our disposal, let's get back to the 
 Having aliases means we can add specific dependencies and classpaths to our project, which is something that _revolt_ heavily bases on. Let's add few aliases which will group dependencies based on features we use during development time. Assuming we use clojurescript, nrepl and capsule for packaging this is all we need in `deps.edn`: 
 
 ``` clojure
-{:aliases {:dev {:extra-paths ["target"]
-                 :main-opts   ["-m" "revolt.bootstrap"
+{:aliases {:dev {:main-opts   ["-m" "revolt.bootstrap"
                                "-c" "revolt.edn"
                                "-a" "nrepl,rebel"]}
 

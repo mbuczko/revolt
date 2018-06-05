@@ -1,6 +1,5 @@
 (ns revolt.task
   (:require [clojure.string :as str]
-            [revolt.utils :as utils]
             [revolt.bootstrap :as bootstrap]
             [revolt.tasks.aot :as aot]
             [revolt.tasks.cljs :as cljs]
@@ -90,12 +89,12 @@
 
         (cond
 
-          ;; handle special arguments (symbols)
+          ;; handle special arguments (keywords)
           (keyword? input-argument)
           (condp = input-argument
             :describe
             (.describe task)
-            (throw (Exception. "Symbol parameter not recognized by task.")))
+            (throw (Exception. "Keyword parameter not recognized by task.")))
 
           ;; handle notifications
           (instance? java.nio.file.Path input-argument)
