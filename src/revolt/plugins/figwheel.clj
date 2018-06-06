@@ -12,10 +12,6 @@
               (update-in [:compiler :output-to] ensure-relative))
          builds)))
 
-(defn ensure-relative-css-paths
-  [paths target]
-  (map (partial utils/ensure-relative-path target) paths))
-
 (defn init-plugin
   "Initializes figwheel plugin."
 
@@ -23,17 +19,17 @@
   (reify Plugin
     (activate [this ctx]
       (if-let [cljs-opts (:builds (.config-val ctx :revolt.task/cljs))]
-        (let [target (.target-dir ctx)
-              builds (ensure-relative-builds-paths cljs-opts target)]
+        (let [assets (utils/ensure-relative-path (.target-dir ctx) "assets")
+              builds (ensure-relative-builds-paths cljs-opts assets)]
 
           (log/debug "Starting figwheel, brace yourself.")
 
           (figwheel/start-figwheel!
            (-> config
-               (update :css-dirs ensure-relative-css-paths target)
+               (update :css-dirs conj assets)
                (assoc  :builds builds))))
 
-        (log/error "revolt.task/cljs builder need to be configured first.")))
+        (log/error "revolt.task/cljs builder needs to be configured first.")))
 
     (deactivate [this ret]
       (log/debug "closing figwheel"))))

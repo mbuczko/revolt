@@ -7,15 +7,22 @@
   (:import  (java.io File)))
 
 (defn invoke
-  [{:keys [input-files options]} classpaths target]
-  (run!
-   (fn [[file relative-path]]
-     (utils/timed
-      (str "SASS " relative-path)
-      (sass/sass-compile-to-file
-       file
-       (io/file (utils/ensure-relative-path target (str/replace relative-path #"\.scss$" ".css")))
-       options)))
-   (eduction
-    (map (juxt io/file identity))
-    input-files)))
+  [{:keys [resources options]} classpaths target]
+
+  (let [assets (utils/ensure-relative-path target "assets")]
+
+    ;; run SASS compilation for every single resource
+    ;; passed in resources collection.
+
+    (run!
+     (fn [[resource relative-path]]
+       (utils/timed
+        (str "SASS " relative-path)
+        (sass/sass-compile-to-file
+         resource
+         (io/file assets (str/replace relative-path #"\.scss$" ".css"))
+         options)))
+
+     (eduction
+      (map (juxt io/resource identity))
+      resources))))

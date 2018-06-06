@@ -128,27 +128,34 @@
 (defmethod create-task ::sass [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (sass/invoke (if (map? input)
-                     (merge opts input)
+      (merge ctx (sass/invoke
+                  (if (map? input)
+                    (merge opts input)
 
-                     ;; this is to filter configured :input-files by an input parameter (a Path).
-                     ;; if filtered list is empty it means all configured :input-files should be
-                     ;; recompiled. Otherwise only input-files left should be considered.
+                    ;; this is to filter configured :resources by an input parameter (a Path).
+                    ;; if filtered list is empty it means all configured :resources should be
+                    ;; recompiled. Otherwise only resources left should be considered.
 
-                     (update opts
-                           :input-files
-                           (fn [input-files path]
-                             (or (seq (filter #(or (nil? path) (= path %)) input-files))
-                                 input-files))
-                           input))
+                    (update opts
+                            :resources
+                            (fn [resources path]
+                              (or (seq (filter #(or (nil? path) (.endsWith path %)) resources))
+                                  resources))
+                            input))
 
-                   classpaths
-                   target)
-      ctx)
+                  classpaths
+                  target)))
     (notify [this path ctx]
       (.invoke this (.toString path) ctx))
     (describe [this]
       "SASS compiler")))
+
+(defmethod create-task ::aot [_ opts classpaths target]
+  (reify Task
+    (invoke [this input ctx]
+      (merge ctx (aot/invoke (merge opts input) ctx classpaths target)))
+    (describe [this]
+      "ahead-of-time compiler")))
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (reify Task
@@ -189,10 +196,3 @@
       (merge ctx (capsule/invoke (merge opts input) ctx target)))
     (describe [this]
       "capsule packager")))
-
-(defmethod create-task ::aot [_ opts classpaths target]
-  (reify Task
-    (invoke [this input ctx]
-      (merge ctx (aot/invoke (merge opts input) ctx classpaths target)))
-    (describe [this]
-      "ahead-of-time compilation")))

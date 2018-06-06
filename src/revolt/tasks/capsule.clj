@@ -287,7 +287,10 @@
              classpath (tools.deps/make-classpath
                         (tools.deps/resolve-deps deps-map nil)
                         (resolve-sibling-paths (:paths deps-map) deps-path)
-                        {:extra-paths (->> (map utils/ensure-absolute-path extra-paths)
+                        {:extra-paths (->> ["classes" "assets"]
+                                           (map (partial utils/ensure-relative-path target))
+                                           (concat extra-paths)
+                                           (map utils/ensure-absolute-path)
                                            (filter (complement nil?)))})
              jar-file  (io/file output-jar)]
 
