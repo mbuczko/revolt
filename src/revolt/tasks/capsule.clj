@@ -101,7 +101,7 @@
 
 (defn dir->relative-entries
   "Returns a collection of [file relative-path] tuples for each file
-  inside provided directory and all nested subdirectories.
+  inside directory and all its nested subdirectories.
 
   `relative-path` is relative to dir itself."
 

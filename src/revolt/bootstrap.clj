@@ -21,11 +21,13 @@
   [["-c" "--config EDN" "EDN resource with revolt configuration."
     :default "revolt.edn"]
 
-   ["-t" "--target DIR" "Target directory where to build artifacts."
+   ["-d" "--target DIR" "Target directory where to build artifacts."
     :default "target"]
 
-   ["-a" "--activate-plugins PLUGINS" "Comma-separated list of plugins to activate."
-    :default "revolt.rebel,revolt.nrepl"]])
+   ["-p" "--plugins PLUGINS" "Comma-separated list of plugins to activate."
+    :default "nrepl,rebel"]
+
+   ["-t" "--tasks TASKS" "Comma-separated list of tasks to run."]])
 
 (defn load-config
   [config-resource]
@@ -59,9 +61,9 @@
 
     (if-let [config-edn (load-config config)]
       (let [returns (atom {})
-            plugins (map
-                     #(let [kw (keyword %)] (plugin/initialize-plugin kw (kw config-edn)))
-                     (utils/build-params-list params :activate-plugins))
+            plugins (for [plugin (utils/build-params-list params :plugins)
+                          :let [kw (keyword plugin)]]
+                      (plugin/initialize-plugin kw (kw config-edn)))
             app-ctx  (reify PluginContext
                        (classpaths [this] cpaths)
                        (target-dir [this] target)

@@ -62,13 +62,12 @@ Typical configuration looks like following:
  :revolt.plugin/watch {:excluded-paths ["src/clj" "resources"]
                        :on-change {:revolt.task/sass "glob:assets/styles/*.scss"}}}
 ```
-After activation plugins usually stay in a separate thread until deactivation phase which happens when JVM shuts down, ie. when plugin running in a main thread
-(like `rebel` or `nrepl`) gets interrupted.
+Right after activation plugins usually stay in a separate thread until deactivation phase hits them in a back which happens on JVM shutdown, triggered for example when plugin 
+running in a main thread (like `rebel`) gets interrupted.
 
 Plugins love to delegate their job down to someone else, as all those bad guys do. In our cruel world these are _tasks_ who handle most of ungrateful work on behalf of Master Plugins.
-As an example: `watch` plugin observes changes in a filesytem and calls a `sass` task when *.scss file is altered. Or sneaky `figwheel` plugin delegates its job to `cljs` task when
-some clojurescript source changes. Sometimes, just like in a `figwheel` example task _has_ to be explicitly configured to have plugin working, in other words task becomes a plugin's
-dependency and you will see a lot of cry and complain when such a dependency is not configured correctly.
+As an example: `watch` plugin observes changes in a filesytem and calls a `sass` task when *.scss file is altered. Sometimes, task _has_ to be explicitly configured to have plugin
+working, in other words task becomes a plugin's dependency and you will see a lot of cry and complain when such a dependency is not configured correctly.
 
 Ok, but how to specify which plugins do we want to activate? This is where `clj` tool from Cognitect comes onto scene, but more on that a bit later...
 
@@ -133,11 +132,11 @@ To have even more fun, each task can be pre-configured in a very similar way as 
 Let's talk about task arguments now.
 
 Having tasks configured doesn't mean they are sealed and we can't bend them to our needs any more. Let's look at the `sass` task as an example. Although it generates CSSes based on
-configured `:input-files`, as all other tasks this one also accepts an argument which can be one of following types:
+configured `:resources`, as all other tasks this one also accepts an argument which can be one of following types:
 
  - A keyword. This type of arguments is automatically handled by _revolt_. As for now only `:describe` responds - returns a human readable description of given task.
  - A `java.nio.file.Path`. This type of arguments is also automatically handled by _revolt_ and is considered as a notification that particular file has been changed and task should react upon. 
- `sass` task uses path to filter already configured `:input-files` and rebuilds only a subset of SCSSes (if possible).
+ `sass` task uses path to filter already configured `:resources` and rebuilds only a subset of SCSSes (if possible).
  - A map. Actually it's up to tasks how to handle incoming map argument, by convension _revolt_ simply merges incoming map into existing configuration:
 
 ``` clojure
@@ -156,7 +155,7 @@ version of our clojurescripts, we can build a following pipeline:
 
 ``` clojure
 (def build (comp (partial capsule {:capsule-type :thin})
-                 (partial cljs {:dist true})
+                 (partial cljs {:optimizations :advanced})
                  sass
                  info
                  clean))
@@ -206,7 +205,7 @@ Having aliases means we can add specific dependencies and classpaths to our proj
 ``` clojure
 {:aliases {:dev {:main-opts   ["-m" "revolt.bootstrap"
                                "-c" "revolt.edn"
-                               "-a" "nrepl,rebel"]}
+                               "-p" "nrepl,rebel"]}
 
            ;; dependencies for nrepl
            :dev/nrepl {:extra-deps {org.clojure/tools.nrepl {:mvn/version "0.2.13"}
@@ -237,7 +236,7 @@ This is to describe in details of how plugins and task are loaded and initialize
 
 ### Plugins rediscovered
 
-When _revolt_ starts up, it collects all the keywords listed in `--activate-plugins` and sequentially loads corresponding namespaces calling a `create-plugin` multi-method at the end (with keywords themselves as a dispatch values). Every such a function returns an object which extends a `Plugin` protocol:
+When _revolt_ starts up, it collects all the keywords listed in `--plugins` and sequentially loads corresponding namespaces calling a `create-plugin` multi-method at the end (with keywords themselves as a dispatch values). Every such a function returns an object which extends a `Plugin` protocol:
 
 ```clojure
     (defprotocol Plugin
