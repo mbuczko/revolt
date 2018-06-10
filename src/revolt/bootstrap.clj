@@ -59,7 +59,7 @@
             plugins (for [[plugin opts] (utils/make-params-coll (:plugins params) "revolt.plugin")
                           :let [kw (keyword plugin)]]
                       (plugin/initialize-plugin kw (merge (kw config-edn) opts)))
-            app-ctx (set-context! (reify PluginContext
+            app-ctx (set-context! (reify SessionContext
                                     (classpaths [this] cpaths)
                                     (target-dir [this] target)
                                     (config-val [this k] (k config-edn))))]

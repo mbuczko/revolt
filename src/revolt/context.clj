@@ -1,7 +1,7 @@
 (ns revolt.context
   (:require [clojure.tools.logging :as log]))
 
-(defprotocol PluginContext
+(defprotocol SessionContext
   (classpaths [this]   "Returns project classpaths.")
   (target-dir [this]   "Returns a project target directory.")
   (config-val [this k] "Returns a value from configuration map."))

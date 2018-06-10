@@ -287,7 +287,7 @@ And configure it later as follows:
 Each plugin gets a _context_ during activation phase. Context contains all the crucial stuff that most of plugins base on:
 
 ```clojure
-    (defprotocol PluginContext
+    (defprotocol SessionContext
       (classpaths [this]   "Returns project classpaths.")
       (target-dir [this]   "Returns a project target directory.")
       (config-val [this k] "Returns a value from configuration map."))
