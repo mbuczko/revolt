@@ -1,6 +1,5 @@
 (ns revolt.task
   (:require [clojure.string :as str]
-            [clojure.walk :as walk]
             [revolt.context :as context]
             [revolt.tasks.aot :as aot]
             [revolt.tasks.cljs :as cljs]
@@ -204,7 +203,7 @@
 (defmethod create-task ::info [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (info/invoke (merge opts (walk/keywordize-keys input)) target)))
+      (merge ctx (info/invoke (merge opts input) target)))
     (describe [this]
       "project info generator")))
 

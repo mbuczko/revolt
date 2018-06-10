@@ -198,13 +198,13 @@ used and abused :)
 
 ## Usage
 
-Ok, so now having both plugins and tasks at our disposal, let's get back to the question how `clj` tool can make use of these toys. Clj comes with a nice mechanism of `aliases` which allow to specify at command line which parts of `deps.edn` configuration should be additionally taken into consideration. That's way more fascinating than it sounds at the beginning :)
-
-Having aliases means we can add specific dependencies and classpaths to our project, which is something that _revolt_ heavily bases on. Let's add few aliases which will group dependencies based on features we use during development time. Assuming we use clojurescript, nrepl and capsule for packaging this is all we need in `deps.edn`: 
+Ok, so having now both plugins and tasks at our disposal, let's get back to the question how `clj` tool can make use of these toys. Clj comes with a nice mechanism of `aliases` which allows to specify
+at command line additional dependencies or classpaths to be resolved when application starts up. Let's add few aliases to group dependencies based on tools required during development time:
+Assuming clojurescript, nrepl and capsule for packaging as base tools being used, this is all we need in `deps.edn`: 
 
 ``` clojure
-{:aliases {:dev {:main-opts   ["-m" "revolt.bootstrap"
-                               "-c" "revolt.edn"
+{:aliases {:dev {:extra-paths ["target/assets"]
+                 :main-opts   ["-m" "revolt.bootstrap"
                                "-p" "nrepl,rebel"]}
 
            ;; dependencies for nrepl
@@ -221,13 +221,27 @@ Having aliases means we can add specific dependencies and classpaths to our proj
                                    co.paralleluniverse/capsule-maven {:mvn/version "1.0.3"}}}}}
 ```
 
-Note the `:extra-paths` and `:main-opts`. First one declares additional paths - a _target_ directory in this case where certain tasks (eg. sass, cljs, aot) will generate their artifacts (CSSes, javascripts, compiled classes...). This location may be changed with extra parameter "-t" in `:main-opts`. 
+Note the `:extra-paths` and `:main-opts`. First one declares additional class path - a _target/assets_ directory where certain tasks (eg. sass, cljs, aot) generate their assets like CSSes or compiled clojurescripts.
+This is required to keep things auto-reloadable - application needs to be aware of resources being regenerated.
 
-`:main-opts` on the other hand are the parameters that `clj` will use to bootstrap revolt: `-m revolt.bootstrap` instructs `clj` to use `revolt.bootstrap` namespace as a main class and pass rest of parameters over there. `-c revolt.edn` points at the revolt configuration file (can be omitted if it's named `revolt.edn`) and `-a nrepl,rebel` lets revolt to activate `revolt.plugin/nrepl` and `revolt.plugin/rebel` plugins (`revolt.plugin/` namespace may be omitted in case of built-in plugins).
+`:main-opts` on the other hand are the parameters that `clj` will use to bootstrap revolt: `-m revolt.bootstrap` instructs `clj` to use `revolt.bootstrap` namespace as a main class and pass rest of parameters over there. 
 
-Now, the final touch. To launch a REPLs with rebel readline, nrepl and all the stuff necessary for clojurescripting and packaging:
+Here is the list of accepted parameters:
 
-    clj -A:dev:dev/nrepl:dev/cljs:dev/pack
+    -c, --config     : location of configuration resource. Defaults to "revolt.edn".
+    -d, --target-dir : location of target directory (relative to project location). This is where all re/generated assets are being stored. Defaults to "target".
+    -p, --plugins    : comma separated list of plugins to activate. Each plugin (a stringified keyword) may be specified with optional parameters:
+    
+                         clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -p revolt.task/nrepl,revolt.task/rebel:init-ns=revolt.task
+                      
+    -t, --tasks      : comma separated list of tasks to run. Simmilar to --plugins, each task (a stringified keyword) may be specified with optional parameters:
+    
+                         clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t revolt.plugin/clean,revolt.plugin/info:env=test:version=1.1.2
+                      
+
+To make things even easier to type, namespace part of keyword may be omitted when a built-in task or plugin is being used. So, it's perfectly legal to call something like this:
+
+                         clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t clean,info:env=test:version=1.1.2
 
 
 ## Development and more tech details

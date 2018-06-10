@@ -3,7 +3,8 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [clojure.walk :as walk])
   (:import  (java.nio.file Paths)
             (java.io File)
             (java.security MessageDigest)))
@@ -49,7 +50,8 @@
     (reduce (fn [reduced param]
               (let [[p & opts] (.split param ":")]
                 (conj reduced [(ensure-ns default-ns p)
-                               (into {} (map #(str/split % #"=") opts))])))
+                               (walk/keywordize-keys
+                                (into {} (map #(str/split % #"=") opts)))])))
             []
             params)))
 
