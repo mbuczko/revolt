@@ -43,10 +43,15 @@
   (when-let [root-dir (and relative-path (.toString (current-dir)))]
     (.toString (Paths/get root-dir (into-array [relative-path])))))
 
-(defn build-params-list
-  [input-params kw]
-  (->> (str/split (kw input-params) #",")
-       (map (partial ensure-ns "revolt.plugin"))))
+(defn make-params-coll
+  [params-str default-ns]
+  (let [params (and params-str (.split params-str ","))]
+    (reduce (fn [reduced param]
+              (let [[p & opts] (.split param ":")]
+                (conj reduced [(ensure-ns default-ns p)
+                               (into {} (map #(str/split % #"=") opts))])))
+            []
+            params)))
 
 (defn safe-read-edn
   [path]

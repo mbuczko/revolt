@@ -1,6 +1,7 @@
 (ns revolt.task
   (:require [clojure.string :as str]
-            [revolt.bootstrap :as bootstrap]
+            [clojure.walk :as walk]
+            [revolt.context :as context]
             [revolt.tasks.aot :as aot]
             [revolt.tasks.cljs :as cljs]
             [revolt.tasks.sass :as sass]
@@ -9,6 +10,7 @@
             [revolt.tasks.codox :as codox]
             [revolt.tasks.clean :as clean]
             [revolt.tasks.capsule :as capsule]
+            [revolt.utils :as utils]
             [clojure.tools.logging :as log]))
 
 (defprotocol Task
@@ -43,65 +45,65 @@
   building directory as arguments."
 
   [kw]
-  (let [ctx  @bootstrap/context
-        task (create-task-with-args kw
-                                    (.config-val ctx kw)
-                                    (.classpaths ctx)
-                                    (.target-dir ctx))]
-    (fn [& [input context]]
+  (context/with-context ctx
+    (let [task (create-task-with-args kw
+                                      (.config-val ctx kw)
+                                      (.classpaths ctx)
+                                      (.target-dir ctx))]
+      (fn [& [input context]]
 
-      ;; as we operate on 2 optional parameter, 3 cases may happen:
-      ;;
-      ;; 1. we will get an input only, like (info {:version 0.0.2})
-      ;;    this is a case where no context was given, and it should
-      ;;    be created automatically.
-      ;;
-      ;; 2. we will get both: input and context.
-      ;;    this is a case where context was given either directly
-      ;;    along with input, eg. `(info {:version} ctx)` or task has
-      ;;    partially defined input, like:
-      ;;
-      ;;     (partial capsule {:version 0.0.2})
-      ;;
-      ;;    and has been composed with other tasks:
-      ;;
-      ;;     (def composed-task (comp capsule info))
-      ;;
-      ;;    invocation of composed task will pass a context from one task
-      ;;    to the other. tasks having input partially defined will get
-      ;;    an input as a first parameter and context as a second one.
-      ;;
-      ;; 3. we will get a context only.
-      ;;    this a slight variation of case 2. and may happen when task is
-      ;;    composed together with others and has no partially defined input
-      ;;    parameter. in this case task will be called with one parameter
-      ;;    only - with an updated context.
-      ;;
-      ;;  to differentiate between case 1 and 3 a type check on first argument
-      ;;  is applied. a ::ContextMap type indicates that argument is a context
-      ;;  (case 3), otherwise it is an input argument (case 1).
+        ;; as we operate on 2 optional parameter, 3 cases may happen:
+        ;;
+        ;; 1. we will get an input only, like (info {:version 0.0.2})
+        ;;    this is a case where no context was given, and it should
+        ;;    be created automatically.
+        ;;
+        ;; 2. we will get both: input and context.
+        ;;    this is a case where context was given either directly
+        ;;    along with input, eg. `(info {:version} app-ctx)` or task has
+        ;;    partially defined input, like:
+        ;;
+        ;;     (partial capsule {:version 0.0.2})
+        ;;
+        ;;    and has been composed with other tasks:
+        ;;
+        ;;     (def composed-task (comp capsule info))
+        ;;
+        ;;    invocation of composed task will pass a context from one task
+        ;;    to the other. tasks having input partially defined will get
+        ;;    an input as a first parameter and context as a second one.
+        ;;
+        ;; 3. we will get a context only.
+        ;;    this a slight variation of case 2. and may happen when task is
+        ;;    composed together with others and has no partially defined input
+        ;;    parameter. in this case task will be called with one parameter
+        ;;    only - with an updated context.
+        ;;
+        ;;  to differentiate between case 1 and 3 a type check on first argument
+        ;;  is applied. a ::ContextMap type indicates that argument is a context
+        ;;  (case 3), otherwise it is an input argument (case 1).
 
-      (let [context-as-input? (= (type input) ::ContextMap)
-            context-map (or context
-                            (when context-as-input? input)
-                            ^{:type ::ContextMap} {})
-            input-argument  (when-not context-as-input? input)]
+        (let [context-as-input? (= (type input) ::ContextMap)
+              context-map (or context
+                              (when context-as-input? input)
+                              ^{:type ::ContextMap} {})
+              input-argument  (when-not context-as-input? input)]
 
-        (cond
+          (cond
 
-          ;; handle special arguments (keywords)
-          (keyword? input-argument)
-          (condp = input-argument
-            :describe
-            (.describe task)
-            (throw (Exception. "Keyword parameter not recognized by task.")))
+            ;; handle special arguments (keywords)
+            (keyword? input-argument)
+            (condp = input-argument
+              :describe
+              (.describe task)
+              (throw (Exception. "Keyword parameter not recognized by task.")))
 
-          ;; handle notifications
-          (instance? java.nio.file.Path input-argument)
-          (.notify task input-argument context-map)
+            ;; handle notifications
+            (instance? java.nio.file.Path input-argument)
+            (.notify task input-argument context-map)
 
-          :else
-          (.invoke task input-argument context-map))))))
+            :else
+            (.invoke task input-argument context-map)))))))
 
 (def require-task-cached (memoize require-task*))
 
@@ -115,6 +117,22 @@
 (defmacro require-all [kws]
   `(when (coll? ~kws)
      [~@(map #(list `require-task %) kws)]))
+
+(defn run-tasks-from-string
+  "Decomposes given string into collection of [task options] tuples and
+  sequentially runs them one after another.
+
+  String is a comma-separated list of tasks to run, along with their
+  optional parameters, like:
+
+       clean,info:env=test:version=1.2,aot,capsule
+
+  Returns ordered collection of context maps returned by each task."
+
+  [tasks-str]
+  (for [[task params] (utils/make-params-coll tasks-str "revolt.task")]
+    (when-let [task-fn (require-task-cached (keyword task))]
+      (task-fn params))))
 
 ;; built-in tasks
 
@@ -186,7 +204,7 @@
 (defmethod create-task ::info [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (info/invoke (merge opts input) target)))
+      (merge ctx (info/invoke (merge opts (walk/keywordize-keys input)) target)))
     (describe [this]
       "project info generator")))
 

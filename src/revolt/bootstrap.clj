@@ -5,16 +5,11 @@
             [clojure.tools.logging :as log]
             [clojure.tools.cli :as cli]
             [clojure.java.classpath :as classpath]
+            [revolt.context :refer :all]
             [revolt.plugin :refer [Plugin create-plugin] :as plugin]
-            [revolt.utils :as utils]))
+            [revolt.utils :as utils]
+            [revolt.task :as task]))
 
-(defprotocol PluginContext
-  (classpaths [this]   "Returns project classpaths.")
-  (target-dir [this]   "Returns a project target directory.")
-  (config-val [this k] "Returns a value from configuration map."))
-
-
-(defonce context (atom {}))
 (defonce status  (atom :not-initialized))
 
 (def cli-options
@@ -24,8 +19,7 @@
    ["-d" "--target DIR" "Target directory where to build artifacts."
     :default "target"]
 
-   ["-p" "--plugins PLUGINS" "Comma-separated list of plugins to activate."
-    :default "nrepl,rebel"]
+   ["-p" "--plugins PLUGINS" "Comma-separated list of plugins to activate."]
 
    ["-t" "--tasks TASKS" "Comma-separated list of tasks to run."]])
 
@@ -52,6 +46,7 @@
   (doseq [p plugins]
     (.deactivate p (get @returns p))))
 
+
 (defn -main
   [& args]
   (let [params (:options (cli/parse-opts args cli-options))
@@ -61,13 +56,13 @@
 
     (if-let [config-edn (load-config config)]
       (let [returns (atom {})
-            plugins (for [plugin (utils/build-params-list params :plugins)
+            plugins (for [[plugin opts] (utils/make-params-coll (:plugins params) "revolt.plugin")
                           :let [kw (keyword plugin)]]
-                      (plugin/initialize-plugin kw (kw config-edn)))
-            app-ctx  (reify PluginContext
-                       (classpaths [this] cpaths)
-                       (target-dir [this] target)
-                       (config-val [this k] (k config-edn)))]
+                      (plugin/initialize-plugin kw (merge (kw config-edn) opts)))
+            app-ctx (set-context! (reify PluginContext
+                                    (classpaths [this] cpaths)
+                                    (target-dir [this] target)
+                                    (config-val [this k] (k config-edn))))]
 
         (add-watch status :status-watcher
                    (fn [key reference old-state new-state]
@@ -81,15 +76,16 @@
                                       (shutdown plugins returns)
                                       (reset! status :terminated))))
 
-        ;; set global application context
-        (reset! context app-ctx)
-
         ;; activate all the plugins sequentially one after another
         (doseq [p plugins]
-          (when-let [ret (.activate p @context)]
+          (when-let [ret (.activate p app-ctx)]
             (swap! returns conj {p ret})))
 
         ;; set global application context
-        (reset! status :initialized))
+        (reset! status :initialized)
 
+        (if-let [result (seq (task/run-tasks-from-string (:tasks params)))]
+          (log/info (last result)))
+
+        (System/exit 0))
       (log/error "Configuration not found."))))
