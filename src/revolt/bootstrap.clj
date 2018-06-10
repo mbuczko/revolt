@@ -78,14 +78,14 @@
 
         (reset! status :initialized)
 
-        ;; activate all the plugins sequentially one after another
+        ;; run sequentially required tasks first...
+        (if-let [result (seq (task/run-tasks-from-string (:tasks params)))]
+          (log/info (last result)))
+
+        ;; ...then activate all the plugins one after another
         (doseq [p plugins]
           (when-let [ret (.activate p app-ctx)]
             (swap! returns conj {p ret})))
-
-
-        (if-let [result (seq (task/run-tasks-from-string (:tasks params)))]
-          (log/info (last result)))
 
         (System/exit 0))
       (log/error "Configuration not found."))))

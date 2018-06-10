@@ -252,6 +252,7 @@ To make things even easier to type, namespace part of keyword may be omitted whe
 
                           clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t clean,info:env=test:version=1.1.2
 
+Last thing to add - when running _revolt_ both with `--plugins` and `--tasks` the latter takes precedence, which means that plugins get activated once all required tasks finish their work.
 
 ## Development and more tech details
 
