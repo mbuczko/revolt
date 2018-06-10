@@ -1,3 +1,5 @@
+[![Clojars Project](https://img.shields.io/clojars/v/defunkt/revolt.svg)](https://clojars.org/defunkt/revolt)
+
 # Introduction
 
 Clojure projects historically leverage the power of two glorious build tools: [leiningen](https://leiningen.org/) and [boot](http://boot-clj.com/). Both battle-tested,
@@ -204,6 +206,8 @@ Assuming clojurescript, nrepl and capsule for packaging as base tools being used
 
 ``` clojure
 {:aliases {:dev {:extra-paths ["target/assets"]
+                 :extra-deps  {defunkt/revolt {:mvn/version "0.1.0"}
+                               com.bhauman/rebel-readline {:mvn/version "0.1.3"}}
                  :main-opts   ["-m" "revolt.bootstrap"
                                "-p" "nrepl,rebel"]}
 
