@@ -58,8 +58,8 @@ Typical configuration looks like following:
 
 ```clojure
 {:revolt.plugin/nrepl {:port 5600}
- :revolt.plugin/rebel {:init-ns "codocs.system"}
- :revolt.plugin/watch {:excluded-paths ["src/clj" "resources"]
+ :revolt.plugin/rebel {:init-ns "foo.system"}
+ :revolt.plugin/watch {:excluded-paths ["src/clj"]
                        :on-change {:revolt.task/sass "glob:assets/styles/*.scss"}}}
 ```
 Right after activation plugins usually stay in a separate thread until deactivation phase hits them in a back which happens on JVM shutdown, triggered for example when plugin 
@@ -226,15 +226,20 @@ This is required to keep things auto-reloadable - application needs to be aware 
 
 `:main-opts` on the other hand are the parameters that `clj` will use to bootstrap revolt: `-m revolt.bootstrap` instructs `clj` to use `revolt.bootstrap` namespace as a main class and pass rest of parameters over there. 
 
-Here is the list of accepted parameters:
+Here is the list of all accepted parameters:
 
     -c, --config     : location of configuration resource. Defaults to "revolt.edn".
-    -d, --target-dir : location of target directory (relative to project location). This is where all re/generated assets are being stored. Defaults to "target".
-    -p, --plugins    : comma separated list of plugins to activate. Each plugin (a stringified keyword) may be specified with optional parameters:
+
+    -d, --target-dir : location of target directory (relative to project location). This is where all re/generated
+                       assets are being stored. Defaults to "target".
+
+    -p, --plugins    : comma separated list of plugins to activate. Each plugin (a stringified keyword) may be
+                      specified with optional parameters:
     
                          clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -p revolt.task/nrepl,revolt.task/rebel:init-ns=revolt.task
                       
-    -t, --tasks      : comma separated list of tasks to run. Simmilar to --plugins, each task (a stringified keyword) may be specified with optional parameters:
+    -t, --tasks      : comma separated list of tasks to run. Simmilar to --plugins, each task (a stringified keyword)
+                       may be specified with optional parameters:
     
                          clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t revolt.plugin/clean,revolt.plugin/info:env=test:version=1.1.2
                       
