@@ -70,19 +70,19 @@
                      (when (= new-state :terminated)
                        (.halt (Runtime/getRuntime) 0))))
 
-        ;; register a shutdown hook to be able to deactivate plugins
+        ;; register a shutdown hook to be able to deactivate plugins on JVM shutdown
         (.addShutdownHook (Runtime/getRuntime)
                           (Thread. #(do
                                       (shutdown plugins returns)
                                       (reset! status :terminated))))
+
+        (reset! status :initialized)
 
         ;; activate all the plugins sequentially one after another
         (doseq [p plugins]
           (when-let [ret (.activate p app-ctx)]
             (swap! returns conj {p ret})))
 
-        ;; set global application context
-        (reset! status :initialized)
 
         (if-let [result (seq (task/run-tasks-from-string (:tasks params)))]
           (log/info (last result)))

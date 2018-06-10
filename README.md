@@ -234,19 +234,19 @@ Here is the list of all accepted parameters:
                        assets are being stored. Defaults to "target".
 
     -p, --plugins    : comma separated list of plugins to activate. Each plugin (a stringified keyword) may be
-                      specified with optional parameters:
+                       specified with optional parameters:
     
-                         clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -p revolt.task/nrepl,revolt.task/rebel:init-ns=revolt.task
+                          clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -p revolt.task/nrepl,revolt.task/rebel:init-ns=revolt.task
                       
     -t, --tasks      : comma separated list of tasks to run. Simmilar to --plugins, each task (a stringified keyword)
                        may be specified with optional parameters:
     
-                         clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t revolt.plugin/clean,revolt.plugin/info:env=test:version=1.1.2
+                          clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t revolt.plugin/clean,revolt.plugin/info:env=test:version=1.1.2
                       
 
 To make things even easier to type, namespace part of keyword may be omitted when a built-in task or plugin is being used. So, it's perfectly legal to call something like this:
 
-                         clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t clean,info:env=test:version=1.1.2
+                          clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t clean,info:env=test:version=1.1.2
 
 
 ## Development and more tech details
