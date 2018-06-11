@@ -11,14 +11,13 @@
                    [metosin/bat-test "0.4.0"]
                    [codox "0.10.3"]
                    [eftest "0.4.3"]
-
                    [adzerk/bootlaces "0.1.13" :scope "test"]
                    [ch.qos.logback/logback-classic "1.2.3" :scope "provided"]])
 
 ;; to check the newest versions:
 ;; boot -d boot-deps ancient
 
-(def +version+ "0.1.3")
+(def +version+ "0.1.4-SNAPSHOT")
 
 (require
  '[clojure.tools.namespace.repl]

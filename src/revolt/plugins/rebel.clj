@@ -21,7 +21,8 @@
                       (log/debug "Loading Clojure code, please wait...")
                       (require ns-sym)
                       (in-ns ns-sym)
-
+                      (when-let [banner (:init-banner config)]
+                        (println (io.aviso.ansi/green banner)))
                       (catch Exception e
                         (log/error "Failed to require dev, this usually means there was a syntax error." (.getMessage e)))))))))
 

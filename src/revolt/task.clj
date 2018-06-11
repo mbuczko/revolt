@@ -129,9 +129,15 @@
   Returns ordered collection of context maps returned by each task."
 
   [tasks-str]
-  (for [[task params] (utils/make-params-coll tasks-str "revolt.task")]
-    (when-let [task-fn (require-task-cached (keyword task))]
-      (task-fn params))))
+  (when-let [required-tasks (seq (utils/make-params-coll tasks-str "revolt.task"))]
+    (loop [tasks required-tasks
+           context {}]
+      (if-let [[task opts] (first tasks)]
+        (recur (rest tasks)
+               (or (when-let [task-fn (require-task-cached (keyword task))]
+                     (task-fn opts context))
+                   context))
+        context))))
 
 ;; built-in tasks
 

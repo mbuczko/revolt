@@ -79,8 +79,8 @@
         (reset! status :initialized)
 
         ;; run sequentially required tasks first...
-        (if-let [result (seq (task/run-tasks-from-string (:tasks params)))]
-          (log/info (last result)))
+        (when-let [result (task/run-tasks-from-string (:tasks params))]
+          (log/info result))
 
         ;; ...then activate all the plugins one after another
         (doseq [p plugins]

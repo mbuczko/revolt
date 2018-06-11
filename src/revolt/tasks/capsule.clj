@@ -305,7 +305,7 @@
                         (config->application-manifest config application version)
                         (:deps deps-map)
                         (into #{} (keys (:caplets config)))
-                        caps-type
+                        (keyword caps-type)
                         (:aot? ctx))
 
              (catch Throwable t
