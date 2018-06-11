@@ -9,7 +9,7 @@
 
   (let [assets (utils/ensure-relative-path target "assets")
         output (utils/ensure-relative-path target "out")
-        advanced? (= optimizations :advanced)]
+        advanced? (= (keyword optimizations) :advanced)]
 
     (run!
      (fn [build]
