@@ -2,6 +2,12 @@
 
 # Introduction
 
+_TL;DR: revolt is a plugins/tasks oriented library which makes it easier to integrate beloved dev tools like nrepl, rebel readline
+or clojurescript into application, based on Cognitect's [command line tools](https://clojure.org/guides/deps_and_cli)._
+
+_To see it in action look at [revolt-edge](https://github.com/mbuczko/revolt-edge) example._
+
+
 Clojure projects historically leverage the power of two glorious build tools: [leiningen](https://leiningen.org/) and [boot](http://boot-clj.com/). Both battle-tested,
 feature rich alternatives allow to choose either declarative (leiningen) or fully programmable way to manage with tons of dependencies, _dev_ / _prod_ builds and whole
 bunch of tasks crucial for clojure developer.
@@ -206,7 +212,7 @@ Assuming clojurescript, nrepl and capsule for packaging as base tools being used
 
 ``` clojure
 {:aliases {:dev {:extra-paths ["target/assets"]
-                 :extra-deps  {defunkt/revolt {:mvn/version "0.1.0"}
+                 :extra-deps  {defunkt/revolt {:mvn/version "0.1.4-SNAPSHOT"}
                                com.bhauman/rebel-readline {:mvn/version "0.1.3"}}
                  :main-opts   ["-m" "revolt.bootstrap"
                                "-p" "nrepl,rebel"]}
@@ -217,8 +223,11 @@ Assuming clojurescript, nrepl and capsule for packaging as base tools being used
                                     refactor-nrepl {:mvn/version "2.4.0-SNAPSHOT"}}}
 
            ;; dependencies for clojurescript builds
-           :dev/cljs {:extra-deps {binaryage/devtools {:mvn/version "0.9.9"}
-                                   figwheel-sidecar {:mvn/version "0.5.15"}}}
+           :dev/cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.238"}
+                                   re-frame {:mvn/version "0.10.5"}
+                                   reagent {:mvn/version "0.8.0-alpha2"}
+                                   figwheel-sidecar {:mvn/version "0.5.15"}
+                                   binaryage/devtools {:mvn/version "0.9.9"}}}
 
            ;; dependencies for packaging tasks
            :dev/pack {:extra-deps {co.paralleluniverse/capsule {:mvn/version "1.0.3"}
