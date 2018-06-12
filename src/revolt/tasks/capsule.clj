@@ -267,10 +267,10 @@
 
 
 (defn invoke
-  [{:keys [exclude-paths extra-paths capsule-type output-jar name group version] :as config} ctx target]
+  [{:keys [exclude-paths extra-paths capsule-type output-jar name package version] :as config} ctx target]
 
   (let [artifact-id (:name ctx name)
-        group-id    (:group ctx group)
+        group-id    (:package ctx package)
         version     (:version ctx version)
         caps-type   (or capsule-type :fat)]
 
@@ -314,4 +314,4 @@
            ;; return capsule location as a result
            {:uberjar output-jar})))
 
-      (throw (Exception. "No 'name' or 'group' parameters provided in task configuration and context.")))))
+      (throw (Exception. "No 'name' or 'package' parameters provided in task configuration and context.")))))

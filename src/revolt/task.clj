@@ -126,7 +126,7 @@
 
        clean,info:env=test:version=1.2,aot,capsule
 
-  Returns ordered collection of context maps returned by each task."
+  Returns final context map."
 
   [tasks-str]
   (when-let [required-tasks (seq (utils/make-params-coll tasks-str "revolt.task"))]

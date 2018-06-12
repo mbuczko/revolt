@@ -5,6 +5,7 @@
                    [org.clojure/tools.logging "0.4.1"]
                    [org.clojure/java.classpath "0.2.3"]
                    [org.clojure/tools.deps.alpha "0.5.435" :exclusions [org.slf4j/slf4j-nop]]
+                   [com.bhauman/rebel-readline "0.1.3"]
                    [net.sf.jpathwatch/jpathwatch "0.95"]
                    [io.aviso/pretty "0.1.34"]
                    [deraen/sass4clj "0.3.1"]

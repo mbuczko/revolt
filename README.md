@@ -98,7 +98,7 @@ or in a bit more clojurey way:
 (def build (comp capsule cljs sass info clean))
 ```
 
-This way calling a `build` composition will clean a target directory, generate project information (name, group, version, git sha...), generate CSSes and finally pack everything into an uberjar 
+This way calling a `build` composition will clean a target directory, generate project information (name, package, version, git sha...), generate CSSes and finally pack everything into an uberjar 
 (a capsule actually). Each of these tasks may generate intermediate result and pass it as a map to the next one in a `context`, eg. `info` task gathers project related information which is at the end
 passed to `capsule` which in turn makes use of these bits to generate a correct package.
 
@@ -106,7 +106,7 @@ To have even more fun, each task can be pre-configured in a very similar way as 
 
 ``` clojure
 :revolt.task/info  {:name "foo"
-                    :group "bar.bazz"
+                    :package bar.bazz
                     :version "0.0.1"
                     :description "My awesome project"}
 
@@ -149,7 +149,7 @@ configured `:resources`, as all other tasks this one also accepts an argument wh
 
 ``` clojure
 (info {:environment :testing})
-⇒ {:name "foo", :group "bar.bazz", :version "0.0.1", :description "My awesome project", :environment :testing}
+⇒ {:name "foo", :package "bar.bazz", :version "0.0.1", :description "My awesome project", :environment :testing}
 ```
 
 Obviously we can provide an argument in a composition too:
@@ -211,9 +211,8 @@ at command line additional dependencies or classpaths to be resolved when applic
 Assuming clojurescript, nrepl and capsule for packaging as base tools being used, this is all we need in `deps.edn`: 
 
 ``` clojure
-{:aliases {:dev {:extra-paths ["target/assets"]
-                 :extra-deps  {defunkt/revolt {:mvn/version "0.1.4-SNAPSHOT"}
-                               com.bhauman/rebel-readline {:mvn/version "0.1.3"}}
+{:aliases {:dev {:extra-deps  {defunkt/revolt {:mvn/version "0.1.4-SNAPSHOT"}}
+                 :extra-paths ["target/assets"]
                  :main-opts   ["-m" "revolt.bootstrap"
                                "-p" "nrepl,rebel"]}
 
