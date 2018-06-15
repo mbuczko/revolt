@@ -19,8 +19,8 @@ One day, according to their tradition, Cognitect surprisingly announced a new pl
 entirely new way of working with dependencies. Things like multi-module project with separate dependencies and dependencies stright from git repo became possible
 just right out of the box.
 
-Despite of this awesomeness people started wondering how to join all these toys together. Drop lein/boot and go along with Cognitect way or use new deps for 
-real application-dependencies and still leverage boot/lein tools for development only? Or maybe ignore that new kid on the block and stick with bullet-proof
+Despite of this awesomeness people started wondering how to join all these toys together. Drop well known lein/boot and go along with Cognitect's way or to use
+new deps for application-specific dependencies and still leverage boot/lein tools for development only? Or maybe ignore new kid on the block and stick with bullet-proof
 tools we used for ages?
 
 One of most interesting moves within this area was JUXT's [edge](https://juxt.pro/blog/posts/edge.html) and their attempt to build a simple but complete Clojure project
@@ -47,12 +47,13 @@ and a few built-in tasks:
 - [x] aot - ahead-of-time compilation
 - [x] test - clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
 - [x] info - project info (name, description, package, version, git branch, sha...)
+- [x] capsule - [capsule](http://www.capsule.io) packaging
+- [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
+
+External tasks planned:
 - [ ] lint - linter based on [eastwood](https://github.com/jonase/eastwood)
 - [ ] analyse - static code analyzer based on [kibit](https://github.com/jonase/kibit)
-- [ ] uberjar - [onejar](http://one-jar.sourceforge.net/) packaging
-- [x] capsule - [capsule](http://www.capsule.io) packaging
 - [ ] ancient - looking for outdated dependencies
-- [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
 
 ## Plugins
 
@@ -75,7 +76,7 @@ running in a main thread (like `rebel`) gets interrupted.
 
 Plugins love to delegate their job down to someone else, as all those bad guys do. In our cruel world these are _tasks_ who handle most of ungrateful work on behalf of Master Plugins.
 As an example: `watch` plugin observes changes in a filesytem and calls a `sass` task when *.scss file is altered. Sometimes, task _has_ to be explicitly configured to have plugin
-working, in other words task becomes a plugin's dependency and you will see a lot of cry and complain when such a dependency is not configured correctly.
+working, as it takes place for example in `figwheel` case which needs `cljs` task configured to run.
 
 Ok, but how to specify which plugins do we want to activate? This is where `clj` tool from Cognitect comes onto scene, but more on that a bit later...
 
@@ -139,7 +140,7 @@ To have even more fun, each task can be pre-configured in a very similar way as 
 
 Let's talk about task arguments now.
 
-Having tasks configured doesn't mean they are sealed and we can't bend them to our needs any more. Let's look at the `sass` task as an example. Although it generates CSSes based on
+Having tasks configured doesn't mean they are sealed and can't be extended in current REPL session any more. Let's look at the `sass` task as an example. Although it generates CSSes based on
 configured `:resources`, as all other tasks this one also accepts an argument which can be one of following types:
 
  - A keyword. This type of arguments is automatically handled by _revolt_. As for now only `:describe` responds - returns a human readable description of given task.
@@ -152,14 +153,14 @@ configured `:resources`, as all other tasks this one also accepts an argument wh
 ⇒ {:name "foo", :package "bar.bazz", :version "0.0.1", :description "My awesome project", :environment :testing}
 ```
 
-Obviously we can provide an argument in a composition too:
+It is often convenient to provide argument in a composition with help of `partial` function:
 
 ``` clojure
 (def build (comp capsule cljs sass (partial info {:environment :testing}) clean))
 ```
 
-Why this is so cool? Because this way we can play with our builds and packaging in a REPL without changing a single line of base configuration. Eg. to generate a thin package with an optimized
-version of our clojurescripts, we can build a following pipeline:
+Why this is so convenient? Because this way we can tinker with our builds and packaging in a REPL without changing a single line of base configuration. Eg. to generate a thin capsule (where dependencies
+will be fetched on first run) with an heavy-optimized version of our clojurescripts, we can construct a following pipeline:
 
 ``` clojure
 (def build (comp (partial capsule {:capsule-type :thin})
@@ -168,10 +169,9 @@ version of our clojurescripts, we can build a following pipeline:
                  info
                  clean))
 ```
-Alright, so we know already how tasks work. We know they modify and pass down a context in a composition chain, and they accept an argument which can be merged into their base configuration. 
-Now, how can we get these tasks into our hands?
+Alright, so we know already how tasks work in general and how additional argument may extend their base configuration. Now, the question is how can we get these tasks into our hands?
 
-Well, quite easy. As you remember tasks are denoted by qualified keywords, like `:revolt.task/capsule`. All we need is now to _require-a-task_ :
+Well, quite easy. As mentioned before, tasks are denoted by qualified keywords, like `:revolt.task/capsule`. All we need is now to _require-a-task_ :
 
 ``` clojure
 (require '[revolt.task :as t])  ;; we need a task namespace first
@@ -221,7 +221,7 @@ Assuming clojurescript, nrepl and capsule for packaging as base tools being used
                                     cider/cider-nrepl {:mvn/version "0.18.0-SNAPSHOT"}
                                     refactor-nrepl {:mvn/version "2.4.0-SNAPSHOT"}}}
 
-           ;; dependencies for clojurescript builds
+           ;; dependencies for clojurescript
            :dev/cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.238"}
                                    re-frame {:mvn/version "0.10.5"}
                                    reagent {:mvn/version "0.8.0-alpha2"}
@@ -233,12 +233,12 @@ Assuming clojurescript, nrepl and capsule for packaging as base tools being used
                                    co.paralleluniverse/capsule-maven {:mvn/version "1.0.3"}}}}}
 ```
 
-Note the `:extra-paths` and `:main-opts`. First one declares additional class path - a _target/assets_ directory where certain tasks (eg. sass, cljs, aot) generate their assets like CSSes or compiled clojurescripts.
-This is required to keep things auto-reloadable - application needs to be aware of resources being regenerated.
+Note the `:extra-paths` and `:main-opts`. First one declares additional class path - a _target/assets_ directory where certain tasks (eg. sass, cljs, aot) dump their generated assets like CSSes or compiled clojurescripts.
+This is required only to keep things auto-reloadable - application needs to be aware of resources being (re)generated.
 
 `:main-opts` on the other hand are the parameters that `clj` will use to bootstrap revolt: `-m revolt.bootstrap` instructs `clj` to use `revolt.bootstrap` namespace as a main class and pass rest of parameters over there. 
 
-Here is the list of all accepted parameters:
+Here is the complete list of all accepted parameters:
 
     -c, --config     : location of configuration resource. Defaults to "revolt.edn".
 
@@ -256,7 +256,7 @@ Here is the list of all accepted parameters:
                           clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t revolt.plugin/clean,revolt.plugin/info:env=test:version=1.1.2
                       
 
-To make things even easier to type, namespace part of keyword may be omitted when a built-in task or plugin is being used. So, it's perfectly legal to call something like this:
+To make things even easier to type, namespace parts of qualified keywords may be omitted when a built-in task or plugin is being used. So, it's perfectly valid to call:
 
                           clojure -A:dev:dev/nrepl:dev/cljs:dev/pack -t clean,info:env=test:version=1.1.2
 
@@ -268,7 +268,8 @@ This is to describe in details of how plugins and task are loaded and initialize
 
 ### Plugins rediscovered
 
-When _revolt_ starts up, it collects all the keywords listed in `--plugins` and sequentially loads corresponding namespaces calling a `create-plugin` multi-method at the end (with keywords themselves as a dispatch values). Every such a function returns an object which extends a `Plugin` protocol:
+When _revolt_ starts up, it collects all the keywords listed in `--plugins` and sequentially loads corresponding namespaces calling a `create-plugin` multi-method (with keywords themselves as a dispatch values) at the end.
+Every such a function returns an object which extends a `Plugin` protocol:
 
 ```clojure
     (defprotocol Plugin
@@ -292,7 +293,7 @@ And configure it later as follows:
     
     {:defunkt.foo/bar {:bazz 1}}
     
-Each plugin gets a _context_ during activation phase. Context contains all the crucial stuff that most of plugins base on:
+Each plugin gets a _session context_ during activation phase. Context contains all the crucial stuff that most of plugins base on:
 
 ```clojure
     (defprotocol SessionContext
@@ -303,3 +304,6 @@ Each plugin gets a _context_ during activation phase. Context contains all the c
 
 Note that plugin activation should return a value required to its correct deactivation. This value will be passed later to `deactivate` function as `ret`.
 
+### Tasks rediscovered
+
+tbd.

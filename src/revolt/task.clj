@@ -1,5 +1,6 @@
 (ns revolt.task
-  (:require [clojure.string :as str]
+  (:require [io.aviso.ansi]
+            [clojure.string :as str]
             [revolt.context :as context]
             [revolt.tasks.aot :as aot]
             [revolt.tasks.cljs :as cljs]
@@ -94,7 +95,7 @@
             (keyword? input-argument)
             (condp = input-argument
               :describe
-              (.describe task)
+              (println (io.aviso.ansi/yellow (.describe task)))
               (throw (Exception. "Keyword parameter not recognized by task.")))
 
             ;; handle notifications
@@ -146,7 +147,9 @@
     (invoke [this input ctx]
       (merge ctx (clean/invoke input target)))
     (describe [this]
-      "target directory cleaner")))
+      "Target directory cleaner.
+
+Cleans target directory.")))
 
 (defmethod create-task ::sass [_ opts classpaths target]
   (reify Task
@@ -171,14 +174,27 @@
     (notify [this path ctx]
       (.invoke this (.toString path) ctx))
     (describe [this]
-      "SASS compiler")))
+      "CSS preprocessor.
+
+Takes preprocessed Sass files and saves them as CSS files into target directory.
+Recognized options:
+
+  :resources - collection of project resources to transform
+  :options - sass compiler options
+")))
 
 (defmethod create-task ::aot [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
       (merge ctx (aot/invoke (merge opts input) ctx classpaths target)))
     (describe [this]
-      "ahead-of-time compiler")))
+      "Ahead-Of-Time compilation.
+
+Compiles clojure namespaces and saves .class files into target directory.
+Recognized options:
+
+  :exta-namespaces - collection of additional namespaces to compile.
+")))
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (reify Task
@@ -187,7 +203,18 @@
     (notify [this path ctx]
       (.invoke this path ctx))
     (describe [this]
-      "CLJS compiler")))
+      "CLJS compiler.
+
+Compiles clojurescript files and saves created javascripts into target directory.
+Recognized options:
+
+  :optimizations - global optimization set on all builds (:none, :whitespace, :simple or :advanced)
+  :builds - collection of builds, where each build consists of:
+
+            :id - build identifier
+            :source-paths - project-relative path of clojurescript files to compile
+            :compiler - clojurescript compiler options (https://clojurescript.org/reference/compiler-options)
+")))
 
 (defmethod create-task ::test [_ opts classpaths target]
   (let [options (merge test/default-options opts)]
@@ -197,25 +224,83 @@
       (notify [this path ctx]
         (.invoke this path ctx))
       (describe [this]
-        "clojure.test runner"))))
+        "clojure.test runner.
+
+Clojure tests runner based on bat-test (https://github.com/metosin/bat-test).
+Recognized options:
+
+  :test-matcher - regex used to select test namespaces (defaults to #\".*test\")
+  :parallel - whether to run tests in parallel (defaults to false)
+  :report - reporting function (:pretty, :progress or :junit)
+  :filter - function to filter the test vars
+  :on-start - function to be called before running tests (after reloading namespaces)
+  :on-end - function to be called after running tests
+  :cloverage - whether to enable Cloverage coverage report (defaults to false)
+  :cloverage-opts - Cloverage options (defaults to nil)
+"))))
 
 (defmethod create-task ::codox [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
       (merge ctx (codox/invoke (merge opts input) ctx target)))
     (describe [this]
-      "API doc generator")))
+      "API doc generator.
+
+Generates API documentation with codox.
+Recognized options:
+
+  :name - project name, eg. \"edge\"
+  :package - symbol describing project package, eg. defunkt.edge
+  :version - project version, eg. \"1.2.0\"
+  :description - project description to be shown
+  :namespace - collection of namespaces to document (by default all namespaces are taken)
+")))
 
 (defmethod create-task ::info [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
       (merge ctx (info/invoke (merge opts input) target)))
     (describe [this]
-      "project info generator")))
+      "Project info generator.
+
+Generates map of project-specific information.
+Recognized options:
+
+  :name - project name, eg. \"edge\"
+  :package - symbol describing project package, eg defunkt.edge
+  :version - project version
+  :description - project description to be shown
+")))
 
 (defmethod create-task ::capsule [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
       (merge ctx (capsule/invoke (merge opts input) ctx target)))
     (describe [this]
-      "capsule packager")))
+      "Capsule packager.
+
+Generates an uberjar-like capsule (http://www.capsule.io).
+Recognized options:
+
+  :exclude-paths - collection of project paths to exclude from capsule
+  :output-jar - project-related path of output jar, eg. dist/foo.jar
+  :capsule-type - type of capsule, one of :empty, :thin or :fat (defaults to :fat)
+  :main - main class to be run
+
+Recognized capsule options (http://www.capsule.io/reference):
+
+  :min-java-version
+  :min-update-version
+  :java-version
+  :jdk-required?
+  :jvm-args
+  :environment-variables
+  :system-properties
+  :security-manager
+  :security-policy
+  :security-policy-appended
+  :java-agents
+  :native-agents
+  :native-dependencies
+  :capsule-log-level
+")))

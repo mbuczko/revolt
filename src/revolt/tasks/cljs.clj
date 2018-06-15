@@ -5,7 +5,7 @@
 
 
 (defn invoke
-  [{:keys [dist builds optimizations]} classpaths target]
+  [{:keys [builds optimizations]} classpaths target]
 
   (let [assets (utils/ensure-relative-path target "assets")
         output (utils/ensure-relative-path target "out")
@@ -22,6 +22,7 @@
                 (update-in [:compiler :output-to] (partial utils/ensure-relative-path assets))
                 (update-in [:compiler :output-dir] (partial utils/ensure-relative-path (if (= opt-kw :advanced) output assets)))
                 (update-in [:compiler :optimizations] (fn [current given] (or given current :none)) opt-kw)
+                (assoc :figwheel true)
                 (as-> conf
                     (utils/dissoc-maybe conf [:compiler :preloads] (= (-> conf :compiler :optimizations) :advanced)))))
       builds))))

@@ -28,10 +28,8 @@
                              :security-policy-appended "Security-Policy-A"
                              :java-agents "Java-Agents"
                              :native-agents "Native-Agents"
-                             :dependencies "Dependencies"
                              :native-dependencies "Native-Dependencies"
-                             :capsule-log-level "Capsule-Log-Level"
-                             :version "Application-Version"})
+                             :capsule-log-level "Capsule-Log-Level"})
 
 (defn filter-paths
   [paths to-exclude]
