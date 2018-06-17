@@ -9,7 +9,8 @@
   (let [ensure-relative (partial utils/ensure-relative-path target)]
     (map #(-> %
               (update-in [:compiler :output-dir] ensure-relative)
-              (update-in [:compiler :output-to] ensure-relative))
+              (update-in [:compiler :output-to] ensure-relative)
+              (assoc :figwheel true))
          builds)))
 
 (defn init-plugin
