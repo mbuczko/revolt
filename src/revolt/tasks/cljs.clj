@@ -1,11 +1,10 @@
 (ns revolt.tasks.cljs
   (:require [clojure.tools.logging :as log]
-            [cljs.build.api]
             [revolt.utils :as utils]))
 
 
 (defn invoke
-  [{:keys [builds optimizations]} classpaths target]
+  [{:keys [builds optimizations]} classpaths target build-fn]
 
   (let [assets (utils/ensure-relative-path target "assets")
         output (utils/ensure-relative-path target "out")
@@ -15,8 +14,8 @@
      (fn [build]
        (utils/timed
         (str "CLJS " (:id build))
-        (cljs.build.api/build (:source-paths build)
-                              (:compiler build))))
+        (build-fn (:source-paths build)
+                  (:compiler build))))
      (eduction
       (map #(-> %
                 (update-in [:compiler :output-to] (partial utils/ensure-relative-path assets))

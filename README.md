@@ -51,6 +51,7 @@ and a few built-in tasks:
 - [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
 
 External tasks planned:
+- [x] [migrations](https://github.com/mbuczko/revolt-flyway-plugin) - [flyway](https://flywaydb.org/) based database migrations
 - [ ] lint - linter based on [eastwood](https://github.com/jonase/eastwood)
 - [ ] analyse - static code analyzer based on [kibit](https://github.com/jonase/kibit)
 - [ ] ancient - looking for outdated dependencies
@@ -120,7 +121,6 @@ To have even more fun, each task can be pre-configured in a very similar way as 
                     :namespaces [foo.main foo.core]}
 
 :revolt.task/cljs  {:builds [{:id "main-ui"
-                              :figwheel true
                               :source-paths ["src/cljs"]
                               :compiler {:main "foo.main"
                                          :output-to "scripts/main.js"
@@ -211,7 +211,7 @@ at command line additional dependencies or classpaths to be resolved when applic
 Assuming clojurescript, nrepl and capsule for packaging as base tools being used, this is all we need in `deps.edn`: 
 
 ``` clojure
-{:aliases {:dev {:extra-deps  {defunkt/revolt {:mvn/version "0.1.4-SNAPSHOT"}}
+{:aliases {:dev {:extra-deps  {defunkt/revolt {:mvn/version "0.1.6"}}
                  :extra-paths ["target/assets"]
                  :main-opts   ["-m" "revolt.bootstrap"
                                "-p" "nrepl,rebel"]}
@@ -223,10 +223,10 @@ Assuming clojurescript, nrepl and capsule for packaging as base tools being used
 
            ;; dependencies for clojurescript
            :dev/cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.238"}
+                                   binaryage/devtools {:mvn/version "0.9.9"}
                                    re-frame {:mvn/version "0.10.5"}
                                    reagent {:mvn/version "0.8.0-alpha2"}
-                                   figwheel-sidecar {:mvn/version "0.5.15"}
-                                   binaryage/devtools {:mvn/version "0.9.9"}}}
+                                   figwheel-sidecar {:mvn/version "0.5.15"}}}
 
            ;; dependencies for packaging tasks
            :dev/pack {:extra-deps {co.paralleluniverse/capsule {:mvn/version "1.0.3"}

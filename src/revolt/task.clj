@@ -197,13 +197,16 @@ Recognized options:
 ")))
 
 (defmethod create-task ::cljs [_ opts classpaths target]
-  (reify Task
-    (invoke [this input ctx]
-      (merge ctx (cljs/invoke (merge opts input) classpaths target)))
-    (notify [this path ctx]
-      (.invoke this path ctx))
-    (describe [this]
-      "CLJS compiler.
+  (require 'cljs.build.api)
+  (let [cljs-api (find-ns 'cljs.build.api)]
+    (when-let [build-fn (ns-resolve cljs-api 'build)]
+      (reify Task
+        (invoke [this input ctx]
+          (merge ctx (cljs/invoke (merge opts input) classpaths target build-fn)))
+        (notify [this path ctx]
+          (.invoke this path ctx))
+        (describe [this]
+          "CLJS compiler.
 
 Compiles clojurescript files and saves created javascripts into target directory.
 Recognized options:
@@ -214,7 +217,7 @@ Recognized options:
             :id - build identifier
             :source-paths - project-relative path of clojurescript files to compile
             :compiler - clojurescript compiler options (https://clojurescript.org/reference/compiler-options)
-")))
+")))))
 
 (defmethod create-task ::test [_ opts classpaths target]
   (let [options (merge test/default-options opts)]
