@@ -51,7 +51,7 @@ and a few built-in tasks:
 - [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
 
 External tasks planned:
-- [x] [migrations](https://github.com/mbuczko/revolt-flyway-plugin) - [flyway](https://flywaydb.org/) based database migrations
+- [x] [migrations](https://github.com/mbuczko/revolt-flyway-task) - [flyway](https://flywaydb.org/) based database migrations
 - [ ] lint - linter based on [eastwood](https://github.com/jonase/eastwood)
 - [ ] analyse - static code analyzer based on [kibit](https://github.com/jonase/kibit)
 - [ ] ancient - looking for outdated dependencies
