@@ -4,7 +4,7 @@
 
 
 (defn invoke
-  [{:keys [builds optimizations]} classpaths target build-fn]
+  [{:keys [builds optimizations]} classpaths target inputs-fn build-fn]
 
   (let [assets (utils/ensure-relative-path target "assets")
         output (utils/ensure-relative-path target "out")
@@ -14,7 +14,7 @@
      (fn [build]
        (utils/timed
         (str "CLJS " (:id build))
-        (build-fn (:source-paths build)
+        (build-fn (apply inputs-fn (:source-paths build))
                   (:compiler build))))
      (eduction
       (map #(-> %

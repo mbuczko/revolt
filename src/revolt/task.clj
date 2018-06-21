@@ -198,11 +198,14 @@ Recognized options:
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (require 'cljs.build.api)
-  (let [cljs-api (find-ns 'cljs.build.api)]
-    (when-let [build-fn (ns-resolve cljs-api 'build)]
+  (let [cljs-api  (find-ns 'cljs.build.api)
+        build-fn  (ns-resolve cljs-api 'build)
+        inputs-fn (ns-resolve cljs-api 'inputs)]
+    (when (and build-fn inputs-fn)
       (reify Task
         (invoke [this input ctx]
-          (merge ctx (cljs/invoke (merge opts input) classpaths target build-fn)))
+          (let [options (merge opts input)]
+            (merge ctx (cljs/invoke options classpaths target inputs-fn build-fn))))
         (notify [this path ctx]
           (.invoke this path ctx))
         (describe [this]
