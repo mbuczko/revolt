@@ -1,4 +1,6 @@
 (ns revolt.task
+  "A home namespace for built-in tasks along with initialization functions."
+
   (:require [io.aviso.ansi]
             [clojure.string :as str]
             [revolt.context :as context]
@@ -119,15 +121,15 @@
      [~@(map #(list `require-task %) kws)]))
 
 (defn run-tasks-from-string
-  "Decomposes given string into collection of [task options] tuples and
-  sequentially runs them one after another.
+  "Decomposes given input string into collection of [task options] tuples
+  and sequentially runs them one after another.
 
-  String is a comma-separated list of tasks to run, along with their
-  optional parameters, like:
+  `tasks-str` is a comma-separated list of tasks to run, along with their
+  optional parameters given as \"parameter=value\" expressions, like:
 
        clean,info:env=test:version=1.2,aot,capsule
 
-  Returns final context map."
+  Returns resulting context map."
 
   [tasks-str]
   (when-let [required-tasks (seq (utils/make-params-coll tasks-str "revolt.task"))]

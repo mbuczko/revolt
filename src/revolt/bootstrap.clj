@@ -1,4 +1,9 @@
 (ns revolt.bootstrap
+  "A namespace gathering all the functions required to bootstrap and shutdown revolt.
+
+  This namespace should be also passed in deps.edn `:main-opts` or used directly with
+  clj --main option to get revolt auto-initialized."
+
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.edn :as edn]
@@ -45,7 +50,6 @@
   [plugins returns]
   (doseq [p plugins]
     (.deactivate p (get @returns p))))
-
 
 (defn -main
   [& args]

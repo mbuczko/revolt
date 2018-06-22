@@ -1,4 +1,6 @@
 (ns revolt.shell
+  "Simple wrappers used to call shell commands as ordinary clojure functions."
+
   (:require [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [clojure.string :as str]))

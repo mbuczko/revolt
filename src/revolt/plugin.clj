@@ -1,4 +1,6 @@
 (ns revolt.plugin
+  "A home namespace for built-in plugins along with initialization functions."
+
   (:require [clojure.tools.logging :as log]))
 
 (defprotocol Plugin
@@ -8,6 +10,9 @@
 (defmulti create-plugin (fn [id config] id))
 
 (defn resolve-from-symbol
+  "Loads the namespace denoted by given symbol and calls `init-plugin`
+  from within, passing plugin configuration as argument."
+
   [sym config]
   (require sym)
   (when-let [initializer (ns-resolve sym 'init-plugin)]

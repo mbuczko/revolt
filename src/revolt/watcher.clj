@@ -1,4 +1,8 @@
 (ns revolt.watcher
+  "Functions used to register paths to be watched.
+
+  Watching mechanism goes into separate thread so it does not block main thread."
+
   (:require [clojure.tools.logging :as log])
   (:import (name.pachler.nio.file StandardWatchEventKind FileSystems WatchService Path Paths)
            (name.pachler.nio.file.ext Bootstrapper)
@@ -22,7 +26,13 @@
     (doseq [f (.listFiles dir) :when (. f isDirectory)]
       (register-dir ws f watched-paths))))
 
-(defn watch-files [f & files]
+(defn watch-files
+  "Registers a function to be executed on files modification.
+
+  File can be a either a plain file or directory, in which case
+  everything (recursively) down will be watched as well."
+
+  [f & files]
   (let [pool (Executors/newSingleThreadExecutor)
         watched-paths (atom {})
         watch-service (.newWatchService (FileSystems/getDefault))]
