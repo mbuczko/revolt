@@ -158,7 +158,7 @@
             (when (class-p entry)
               (create-jar-entry entry-name capsule-jis jar-stream))
             (recur (.getNextJarEntry capsule-jis))))))
-    (log/error "No capsule jar found. Check for co.paralleluniverse/capsule in dependencies.")))
+    (throw (Exception. "No capsule jar found. Check for co.paralleluniverse/capsule in dependencies."))))
 
 (defn add-capsule-class
   [^JarOutputStream jar-stream]
