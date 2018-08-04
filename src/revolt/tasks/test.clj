@@ -34,5 +34,5 @@
 
 
 (defn invoke
-  [opts]
-  {:test-report (bat-test/run opts)})
+  [ctx opts]
+  (assoc ctx :test-report (bat-test/run opts)))

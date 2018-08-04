@@ -47,6 +47,7 @@ and a few built-in tasks:
 - [x] aot - ahead-of-time compilation
 - [x] test - clojure.test runner based on Metosin's [bat-test](https://github.com/metosin/bat-test)
 - [x] info - project info (name, description, package, version, git branch, sha...)
+- [x] assets - static assets fingerprinting
 - [x] capsule - [capsule](http://www.capsule.io) packaging
 - [x] codox - API documentation with [codox](https://github.com/weavejester/codox)
 
@@ -58,7 +59,7 @@ External tasks planned:
 
 ## Plugins
 
-Plugins are one these guys who always cause problems. No matter if that's boot or lein, they just barely fit into architecture with what they do. And they do a lot of
+Plugins are these guys who always cause problems. No matter if that's boot or lein, they just barely fit into architecture with what they do. And they do a lot of
 weird things, eg. nREPL is a socket server waiting for connection, REPL is a command line waiting for input, watcher on the other hand is a never ending loop watching
 for file changes. Apples and oranges put together into same basket.
 

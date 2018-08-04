@@ -11,7 +11,7 @@
     (compile namespace)))
 
 (defn invoke
-  [{:keys [extra-namespaces]} ctx classpaths target]
+  [ctx {:keys [extra-namespaces]} classpaths target]
 
   (let [classes (utils/ensure-relative-path target "classes")]
 
@@ -30,4 +30,4 @@
        ;; compile additional namespaces (if any)
        (compile-namespaces extra-namespaces)))
 
-    {:aot? true}))
+    (assoc ctx :aot? true)))

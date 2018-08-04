@@ -11,11 +11,11 @@
     (delete-f (clojure.java.io/file fname))))
 
 (defn invoke
-  [input target]
+  [ctx input target]
   (utils/timed
    (str "CLEAN " target)
    (do
      (doseq [dir [target "out"]]
        (delete-files-recursively dir true))
 
-     {:target-cleaned? true})))
+     (assoc ctx :target-cleaned? true))))

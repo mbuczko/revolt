@@ -11,6 +11,7 @@
             [revolt.tasks.info :as info]
             [revolt.tasks.codox :as codox]
             [revolt.tasks.clean :as clean]
+            [revolt.tasks.assets :as assets]
             [revolt.tasks.capsule :as capsule]
             [revolt.utils :as utils]
             [clojure.tools.logging :as log]))
@@ -147,7 +148,7 @@
 (defmethod create-task ::clean [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (clean/invoke input target)))
+      (clean/invoke ctx input target))
     (describe [this]
       "Target directory cleaner.
 
@@ -156,39 +157,39 @@ Cleans target directory.")))
 (defmethod create-task ::sass [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (sass/invoke
-                  (if (map? input)
-                    (merge opts input)
-
-                    ;; this is to filter configured :resources by an input parameter (a Path).
-                    ;; if filtered list is empty it means all configured :resources should be
-                    ;; recompiled. Otherwise only resources left should be considered.
-
-                    (update opts
-                            :resources
-                            (fn [resources path]
-                              (or (seq (filter #(or (nil? path) (.endsWith path %)) resources))
-                                  resources))
-                            input))
-
-                  classpaths
-                  target)))
+      (let [in (if (map? input)
+                 (merge opts input)
+                 (assoc opts :file input))]
+        (sass/invoke ctx in classpaths target)))
     (notify [this path ctx]
-      (.invoke this (.toString path) ctx))
+      (.invoke this path ctx))
     (describe [this]
       "CSS preprocessor.
 
 Takes preprocessed Sass files and saves them as CSS files into target directory.
 Recognized options:
 
-  :resources - collection of project resources to transform
+  :source-path - location of directory with CSSes to transform
   :options - sass compiler options
+")))
+
+(defmethod create-task ::assets [_ opts classpaths target]
+  (reify Task
+    (invoke [this input ctx]
+      (let [in (if (map? input)
+                 (merge opts input)
+                 (assoc opts :file input))]
+        (assets/invoke ctx in classpaths target)))
+    (notify [this path ctx]
+      ctx)
+    (describe [this]
+      "Assets fingerprinting.
 ")))
 
 (defmethod create-task ::aot [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (aot/invoke (merge opts input) ctx classpaths target)))
+      (aot/invoke ctx (merge opts input) classpaths target))
     (describe [this]
       "Ahead-Of-Time compilation.
 
@@ -207,7 +208,7 @@ Recognized options:
       (reify Task
         (invoke [this input ctx]
           (let [options (merge opts input)]
-            (merge ctx (cljs/invoke options classpaths target inputs-fn build-fn))))
+            (cljs/invoke ctx options classpaths target inputs-fn build-fn)))
         (notify [this path ctx]
           (.invoke this path ctx))
         (describe [this]
@@ -250,7 +251,7 @@ Recognized options:
 (defmethod create-task ::codox [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (codox/invoke (merge opts input) ctx target)))
+      (codox/invoke ctx (merge opts input) target))
     (describe [this]
       "API doc generator.
 
@@ -267,7 +268,7 @@ Recognized options:
 (defmethod create-task ::info [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (info/invoke (merge opts input) target)))
+      (info/invoke ctx (merge opts input) target))
     (describe [this]
       "Project info generator.
 
@@ -283,7 +284,7 @@ Recognized options:
 (defmethod create-task ::capsule [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (merge ctx (capsule/invoke (merge opts input) ctx target)))
+      (capsule/invoke ctx (merge opts input) target))
     (describe [this]
       "Capsule packager.
 
