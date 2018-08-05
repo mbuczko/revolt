@@ -169,7 +169,8 @@ Cleans target directory.")))
 Takes preprocessed Sass files and saves them as CSS files into target directory.
 Recognized options:
 
-  :source-path - location of directory with CSSes to transform
+  :source-path - relative directory with sass/scss files to transform
+  :output-dir - directory where to store generated CSS files
   :options - sass compiler options
 ")))
 
@@ -183,7 +184,14 @@ Recognized options:
     (notify [this path ctx]
       ctx)
     (describe [this]
-      "Assets fingerprinting.
+      "Static assets fingerprinter.
+
+Fingerprints assets and updates all references in related resources like HTMLs or styles.
+Recognized options:
+
+  :source-paths - collection of assets paths
+  :exclude-paths - collection of paths to exclude from fingerprinting
+  :assets-holders - collection of extensions (like \"html\" or \"css\") of files that should be updated
 ")))
 
 (defmethod create-task ::aot [_ opts classpaths target]

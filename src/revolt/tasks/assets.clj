@@ -83,8 +83,8 @@
       file)))
 
 (defn invoke
-  [ctx {:keys [source-paths exclude-paths output-dir assets-holders options]} classpaths target]
-  (let [assets-path (utils/ensure-relative-path target (str "assets" File/separator output-dir))
+  [ctx {:keys [source-paths exclude-paths assets-holders options]} classpaths target]
+  (let [assets-path (utils/ensure-relative-path target "assets")
         holders (map #(str "." (.toLowerCase %)) assets-holders)]
 
     (utils/timed
