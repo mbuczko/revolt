@@ -7,6 +7,15 @@
   (:import  (java.io File)
             (java.nio.file Paths)))
 
+(defn exclude-sass-pack-fn
+  "A handler called before packing.
+  Returns nil when entry ends with .sass which excludes this file from being jar-packed."
+
+  [file entry-name]
+  (when-not (or (.endsWith entry-name ".sass")
+                (.endsWith entry-name ".scss"))
+    file))
+
 (defn invoke
   [ctx {:keys [source-path output-dir file options]} classpaths target]
 
@@ -29,4 +38,5 @@
               file
               (io/file assets-path (str/replace relative-output #"\.scss$" ".css"))
               options)))))
-      ctx)))
+
+      (update ctx :before-pack-fns conj exclude-sass-pack-fn))))
