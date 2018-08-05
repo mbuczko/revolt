@@ -19,7 +19,7 @@
 ;; to check the newest versions:
 ;; boot -d boot-deps ancient
 
-(def +version+ "0.1.7")
+(def +version+ "1.0.0-SNAPSHOT")
 
 (require
  '[clojure.tools.namespace.repl]
