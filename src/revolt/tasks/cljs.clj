@@ -4,7 +4,7 @@
 
 
 (defn invoke
-  [{:keys [builds optimizations]} classpaths target inputs-fn build-fn]
+  [ctx {:keys [builds optimizations]} classpaths target inputs-fn build-fn]
 
   (let [assets (utils/ensure-relative-path target "assets")
         output (utils/ensure-relative-path target "out")
@@ -23,4 +23,5 @@
                 (update-in [:compiler :optimizations] (fn [current given] (or given current :none)) opt-kw)
                 (as-> conf
                     (utils/dissoc-maybe conf [:compiler :preloads] (= (-> conf :compiler :optimizations) :advanced)))))
-      builds))))
+      builds))
+    ctx))

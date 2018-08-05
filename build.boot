@@ -1,9 +1,9 @@
 (set-env!
  :source-paths   #{"src"}
  :dependencies   '[[org.clojure/clojure "1.9.0"]
+                   [org.clojure/java.classpath "0.2.3"]
                    [org.clojure/tools.cli "0.3.5"]
                    [org.clojure/tools.logging "0.4.1"]
-                   [org.clojure/java.classpath "0.2.3"]
                    [org.clojure/tools.namespace "0.3.0-alpha4"]
                    [org.clojure/tools.deps.alpha "0.5.435" :exclusions [org.slf4j/slf4j-nop]]
                    [com.bhauman/rebel-readline "0.1.3"]
