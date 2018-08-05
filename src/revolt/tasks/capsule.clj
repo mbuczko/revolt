@@ -113,6 +113,24 @@
                                   (.relativize (.toPath %))
                                   (.toString)))))))
 
+(defn before-add-path-hook
+  "Pushes file through stack of handlers right before adding it to a jar.
+
+  Each handler is a function of two parameters: a file and jar entry-name and
+  should return a file (same as received or some other) which is passed to the
+  next handler.
+
+  Handler may return a nil which means that file should not be added to resulting
+  uberjar (capsule)."
+
+  [file entry-name handlers]
+  (loop [input file, handlers handlers]
+    (let [handler (first handlers)]
+      (if-not handler
+        input
+        (recur (handler input entry-name)
+               (rest handlers))))))
+
 (defn create-jar-entry
   "Creates a new entry in a jar out of given name and InputStream."
 
@@ -198,7 +216,7 @@
   jar-stream)
 
 (defn add-paths
-  [^JarOutputStream jar-stream classpaths aot? morph-fn]
+  [^JarOutputStream jar-stream classpaths aot? before-pack-fns]
   (try
     (doseq [[file name] (->> classpaths
                              (map io/file)
@@ -206,11 +224,7 @@
                              (mapcat dir->relative-entries))
             :when (not (and aot? (.endsWith name ".clj")))]
 
-      ;; morphing function may return nil which means file should
-      ;; not be included into resulting uberjar.
-      ;; otherwise returned (possibly altered) file added.
-
-      (when-let [resource (if morph-fn (morph-fn file name) file)]
+      (when-let [resource (before-add-path-hook file name before-pack-fns)]
         (add-to-jar name resource jar-stream)))
 
     (catch Exception e
@@ -246,7 +260,7 @@
 (defn build-jar
   "Builds a jar which is essentially a capsule of preconfigured type."
 
-  [^JarOutputStream jar-stream application classpath manifest deps caplets capsule-type {:keys [aot? morph-fn]}]
+  [^JarOutputStream jar-stream application classpath manifest deps caplets capsule-type {:keys [aot? before-pack-fns]}]
   (let [classpaths (str/split classpath (re-pattern File/pathSeparator))]
     (-> jar-stream
         (add-manifest (ensure-runtime-deps application manifest deps capsule-type))
@@ -257,7 +271,7 @@
         ;; :thin capsule has only application dependecies included.
 
         (cond-> (not= capsule-type :empty)
-          (add-paths classpaths aot? morph-fn))
+          (add-paths classpaths aot? before-pack-fns))
 
         ;; :fat capsule has all dependecies included.
         ;; it's simply self-contained uberjar.

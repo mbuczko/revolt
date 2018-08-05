@@ -73,7 +73,7 @@
 
 (defn morph-resource
   [assets-kv assets-holders patterns file entry-name]
-  (when-not (assets-kv entry-name)
+  (when (and file (not (assets-kv entry-name)))
     (if (some #(.endsWith (.toLowerCase entry-name) %) assets-holders)
       (let [tmp-file (File/createTempFile entry-name ".tmp")]
         (log/debug "replacing references to fingerprinted resource in:" entry-name)
@@ -97,6 +97,6 @@
      (let [assets-kv (into {} (fingerprint assets-path))
            patterns  (map #(vector (re-pattern (first %)) (second %)) assets-kv)]
 
-       (assoc ctx
-              :assets assets-kv
-              :morph-fn (partial morph-resource assets-kv holders patterns))))))
+       (-> ctx
+           (assoc  :assets assets-kv)
+           (update :before-pack-fns conj (partial morph-resource assets-kv holders patterns)))))))
