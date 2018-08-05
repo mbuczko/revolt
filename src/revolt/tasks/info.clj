@@ -7,12 +7,12 @@
 (def ^:private datetime-formatter
   (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd HH:mm:ss"))
 
-(defn invoke [kv target]
+(defn invoke [ctx kv target]
   (utils/timed
    "INFO"
-   (merge
-    {:sha (git rev-parse --short HEAD)
-     :tag (git describe --abbrev=0 --tags HEAD)
-     :branch (git rev-parse --abbrev-ref HEAD)
-     :timestamp (.format (java.time.LocalDateTime/now) datetime-formatter)}
-    kv)))
+   (-> ctx
+       (assoc :sha (git rev-parse --short HEAD)
+              :tag (git describe --abbrev=0 --tags HEAD)
+              :branch (git rev-parse --abbrev-ref HEAD)
+              :timestamp (.format (java.time.LocalDateTime/now) datetime-formatter))
+       (merge kv))))

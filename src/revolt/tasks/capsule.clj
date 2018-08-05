@@ -113,13 +113,31 @@
                                   (.relativize (.toPath %))
                                   (.toString)))))))
 
+(defn before-add-path-hook
+  "Pushes file through stack of handlers right before adding it to a jar.
+
+  Each handler is a function of two parameters: a file and jar entry-name and
+  should return a file (same as received or some other) which is passed to the
+  next handler.
+
+  Handler may return a nil which means that file should not be added to resulting
+  uberjar (capsule)."
+
+  [file entry-name handlers]
+  (loop [input file, handlers handlers]
+    (let [handler (first handlers)]
+      (if-not handler
+        input
+        (recur (handler input entry-name)
+               (rest handlers))))))
+
 (defn create-jar-entry
   "Creates a new entry in a jar out of given name and InputStream."
 
   [name ^InputStream input-stream ^JarOutputStream jar-stream]
   (log/debug "adding to jar:" name)
   (.putNextEntry jar-stream (ZipEntry. name))
-    (io/copy input-stream jar-stream)
+  (io/copy input-stream jar-stream)
   (doto jar-stream (.closeEntry)))
 
 (defn add-to-jar
@@ -148,7 +166,7 @@
 
 (defn add-classes-from-artifact
   [^JarOutputStream jar-stream artifact class-p]
-  (when-let [capsule-jar (first (filter #(.contains % artifact) (system-classpaths)))]
+  (if-let [capsule-jar (first (filter #(.contains % artifact) (system-classpaths)))]
     (with-open [capsule-is  (io/input-stream capsule-jar)
                 capsule-jis (JarInputStream. capsule-is)]
       (loop [^JarEntry entry (.getNextJarEntry capsule-jis)]
@@ -157,7 +175,8 @@
           (let [entry-name (.getName entry)]
             (when (class-p entry)
               (create-jar-entry entry-name capsule-jis jar-stream))
-            (recur (.getNextJarEntry capsule-jis))))))))
+            (recur (.getNextJarEntry capsule-jis))))))
+    (throw (Exception. "No capsule jar found. Check for co.paralleluniverse/capsule in dependencies."))))
 
 (defn add-capsule-class
   [^JarOutputStream jar-stream]
@@ -197,13 +216,19 @@
   jar-stream)
 
 (defn add-paths
-  [^JarOutputStream jar-stream classpaths aot?]
-  (doseq [[file name] (->> classpaths
-                           (map io/file)
-                           (filter (memfn isDirectory))
-                           (mapcat dir->relative-entries))
-          :when (not (and aot? (.endsWith name ".clj")))]
-    (add-to-jar name file jar-stream))
+  [^JarOutputStream jar-stream classpaths aot? before-pack-fns]
+  (try
+    (doseq [[file name] (->> classpaths
+                             (map io/file)
+                             (filter (memfn isDirectory))
+                             (mapcat dir->relative-entries))
+            :when (not (and aot? (.endsWith name ".clj")))]
+
+      (when-let [resource (before-add-path-hook file name before-pack-fns)]
+        (add-to-jar name resource jar-stream)))
+
+    (catch Exception e
+      (log/error (.getMessage e))))
   jar-stream)
 
 (defn ensure-runtime-deps
@@ -232,11 +257,10 @@
         ;; return untouched manifest by default
         manifest))))
 
-
 (defn build-jar
   "Builds a jar which is essentially a capsule of preconfigured type."
 
-  [^JarOutputStream jar-stream application classpath manifest deps caplets capsule-type aot?]
+  [^JarOutputStream jar-stream application classpath manifest deps caplets capsule-type {:keys [aot? before-pack-fns]}]
   (let [classpaths (str/split classpath (re-pattern File/pathSeparator))]
     (-> jar-stream
         (add-manifest (ensure-runtime-deps application manifest deps capsule-type))
@@ -247,7 +271,7 @@
         ;; :thin capsule has only application dependecies included.
 
         (cond-> (not= capsule-type :empty)
-          (add-paths classpaths aot?))
+          (add-paths classpaths aot? before-pack-fns))
 
         ;; :fat capsule has all dependecies included.
         ;; it's simply self-contained uberjar.
@@ -265,7 +289,7 @@
 
 
 (defn invoke
-  [{:keys [exclude-paths extra-paths capsule-type output-jar name package version] :as config} ctx target]
+  [ctx {:keys [exclude-paths extra-paths capsule-type output-jar name package version] :as config} target]
 
   (let [artifact-id (:name ctx name)
         group-id    (:package ctx package)
@@ -304,12 +328,12 @@
                         (:deps deps-map)
                         (into #{} (keys (:caplets config)))
                         (keyword caps-type)
-                        (:aot? ctx))
+                        ctx)
 
              (catch Throwable t
                (log/errorf "Error while creating a jar file: %s" (.getMessage t))))
 
            ;; return capsule location as a result
-           {:uberjar output-jar})))
+           (assoc ctx :uberjar output-jar))))
 
       (throw (Exception. "No 'name' or 'package' parameters provided in task configuration and context.")))))

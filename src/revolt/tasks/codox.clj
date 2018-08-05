@@ -13,7 +13,7 @@
     params))
 
 (defn invoke
-  [opts ctx target]
+  [ctx opts target]
   (let [target-path (utils/ensure-relative-path target "doc")]
     (codox.main/generate-docs
      (-> ctx
@@ -23,4 +23,4 @@
          (assoc :output-path target-path)))
 
     ;; return location of generated docs
-    {:codox target-path}))
+    (assoc ctx :codox target-path)))

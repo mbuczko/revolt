@@ -4,25 +4,39 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [revolt.utils :as utils])
-  (:import  (java.io File)))
+  (:import  (java.io File)
+            (java.nio.file Paths)))
+
+(defn exclude-sass-pack-fn
+  "A handler called before packing.
+  Returns nil when entry ends with .sass which excludes this file from being jar-packed."
+
+  [file entry-name]
+  (when-not (or (.endsWith entry-name ".sass")
+                (.endsWith entry-name ".scss"))
+    file))
 
 (defn invoke
-  [{:keys [resources options]} classpaths target]
+  [ctx {:keys [source-path output-dir file options]} classpaths target]
 
-  (let [assets (utils/ensure-relative-path target "assets")]
+  (let [assets-path (utils/ensure-relative-path target (str "assets" File/separator output-dir))
+        source-path (Paths/get source-path (make-array String 0))]
 
-    ;; run SASS compilation for every single resource
-    ;; passed in resources collection.
+    ;; run SASS compilation for every single file found in
+    ;; source-path, which file name does not start with _
 
-    (run!
-     (fn [[resource relative-path]]
-       (utils/timed
-        (str "SASS " relative-path)
-        (sass/sass-compile-to-file
-         resource
-         (io/file assets (str/replace relative-path #"\.scss$" ".css"))
-         options)))
+    (let [path (io/file (or file source-path))]
 
-     (eduction
-      (map (juxt io/resource identity))
-      resources))))
+      (utils/timed
+       (str "SASS " path)
+       (doseq [file (file-seq path)]
+         (when (and (.isFile file)
+                    (not (.startsWith (.getName file) "_")))
+
+           (let [relative-output (.relativize source-path (.toPath file))]
+             (sass/sass-compile-to-file
+              file
+              (io/file assets-path (str/replace relative-output #"\.scss$" ".css"))
+              options)))))
+
+      (update ctx :before-pack-fns conj exclude-sass-pack-fn))))
