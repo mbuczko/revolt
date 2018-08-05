@@ -182,6 +182,7 @@ Recognized options:
                  (assoc opts :file input))]
         (assets/invoke ctx in classpaths target)))
     (notify [this path ctx]
+      (log/warn "Notification is not handled by \"assets\" task.")
       ctx)
     (describe [this]
       "Static assets fingerprinter.
