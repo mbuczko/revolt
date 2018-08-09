@@ -210,6 +210,7 @@ Recognized options:
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (require 'cljs.build.api)
+
   (let [cljs-api  (find-ns 'cljs.build.api)
         build-fn  (ns-resolve cljs-api 'build)
         inputs-fn (ns-resolve cljs-api 'inputs)]
