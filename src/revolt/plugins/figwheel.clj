@@ -35,17 +35,21 @@
           ;; be sure assets dir already exists in case no plugin or task created it before
           (io/make-parents assets)
 
-          (let [figwheel-conf (-> config
-                                  (update :watch-dirs concat (:source-paths build))
-                                  (update :css-dirs conj assets)
-                                  (assoc  :mode :serve)
-                                  (dissoc :build-id))]
+          (if build
+            (let [figwheel-conf (-> config
+                                    (update :watch-dirs concat (:source-paths build))
+                                    (update :css-dirs conj assets)
+                                    (assoc  :mode :serve)
+                                    (dissoc :build-id))
 
-            (fig-fn figwheel-conf (-> build
-                                      (assoc  :id (:id build))
-                                      (assoc  :options (:compiler build))
-                                      (dissoc :compiler)
-                                      (dissoc :source-paths)))))
+                  build-conf (-> build
+                                 (assoc  :id (:id build))
+                                 (assoc  :options (:compiler build))
+                                 (dissoc :compiler)
+                                 (dissoc :source-paths))]
+
+              (fig-fn figwheel-conf build-conf))
+            (log/error "Build not found")))
 
         (log/error "revolt.task/cljs task needs to be configured.")))
 
