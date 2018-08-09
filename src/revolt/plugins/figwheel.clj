@@ -2,7 +2,8 @@
   (:require [clojure.tools.logging :as log]
             [revolt.plugin :refer [Plugin create-plugin]]
             [revolt.utils :as utils]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [figwheel.main.api :as figwheel]))
 
 (defn ensure-relative-builds-paths
   [builds target]
@@ -18,14 +19,9 @@
   [config]
   (reify Plugin
     (activate [this ctx]
-      (require 'figwheel.main.api)
-
       (if-let [cljs-opts (:builds (.config-val ctx :revolt.task/cljs))]
         (let [assets (utils/ensure-relative-path (.target-dir ctx) "assets")
               builds (ensure-relative-builds-paths cljs-opts assets)
-              fig-ns (find-ns 'figwheel.main.api)
-              fig-fn (ns-resolve fig-ns 'start)
-
               build  (first (if-let [id (:build-id config)]
                               (filter #(= id (:id %)) builds)
                               builds))]
@@ -43,15 +39,18 @@
                                     (dissoc :build-id))
 
                   build-conf (-> build
-                                 (assoc  :id (:id build))
-                                 (assoc  :options (:compiler build))
-                                 (dissoc :compiler)
-                                 (dissoc :source-paths))]
+                                 (assoc  :id (:id build)
+                                         :options (:compiler build))
+                                 (dissoc :compiler
+                                         :source-paths))]
 
-              (fig-fn figwheel-conf build-conf))
+              (figwheel/start figwheel-conf build-conf)
+              (:id build))
+
             (log/error "Build not found")))
-
         (log/error "revolt.task/cljs task needs to be configured.")))
 
-    (deactivate [this ret]
-      (log/debug "closing figwheel"))))
+    (deactivate [this build-id]
+      (when build-id
+        (log/infof "stopping figwheel. build-id: %s." build-id)
+        (figwheel/stop build-id)))))
