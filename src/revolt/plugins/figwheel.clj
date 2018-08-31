@@ -13,44 +13,57 @@
               (update-in [:compiler :output-to] ensure-relative))
          builds)))
 
+(defn merge-with-compiler-opts
+  [builds compiler-opts]
+  (map #(update % :compiler merge compiler-opts) builds))
+
+(defn filter-maybe
+  [builds ids]
+  (if-not ids
+    builds
+    (filter (fn [build]
+              (some #(= (:id build) %) ids))
+            builds)))
+
 (defn init-plugin
   "Initializes figwheel plugin."
 
   [config]
   (reify Plugin
     (activate [this ctx]
-      (if-let [cljs-opts (:builds (.config-val ctx :revolt.task/cljs))]
+      (if-let [cljs-opts (.config-val ctx :revolt.task/cljs)]
         (let [assets (utils/ensure-relative-path (.target-dir ctx) "assets")
-              builds (ensure-relative-builds-paths cljs-opts assets)
-              build  (first (if-let [id (:build-id config)]
-                              (filter #(= id (:id %)) builds)
-                              builds))]
-
-          (log/infof "Starting figwheel. build-id: %s." (:id build))
+              cljs-compiler (:compiler cljs-opts)
+              cljs-builds   (-> (:builds cljs-opts)
+                                (merge-with-compiler-opts cljs-compiler)
+                                (ensure-relative-builds-paths assets))
+              builds (filter-maybe cljs-builds (:builds config))]
 
           ;; be sure assets dir already exists in case no plugin or task created it before
           (io/make-parents assets)
 
-          (if build
-            (let [figwheel-conf (-> config
-                                    (update :watch-dirs concat (:source-paths build))
+          (if (seq builds)
+            (let [source-paths  (mapcat :source-paths builds)
+                  figwheel-conf (-> config
+                                    (update :watch-dirs concat source-paths)
                                     (update :css-dirs conj assets)
-                                    (assoc  :mode :serve)
-                                    (dissoc :build-id))
+                                    (dissoc :builds)
+                                    (assoc  :mode :serve
+                                            :rebel-readline false
+                                            :open-url false))
+                  builds-conf  (map #(-> %
+                                         (assoc  :options (:compiler %))
+                                         (dissoc :compiler
+                                                 :source-paths))
+                                    builds)]
 
-                  build-conf (-> build
-                                 (assoc  :id (:id build)
-                                         :options (:compiler build))
-                                 (dissoc :compiler
-                                         :source-paths))]
+              (log/infof "Starting figwheel with builds: %s" (:builds config))
 
-              (figwheel/start figwheel-conf build-conf)
-              (:id build))
+              (apply figwheel/start (cons figwheel-conf builds-conf)))
 
-            (log/error "Build not found")))
+            (log/error "None of configured builds found.")))
         (log/error "revolt.task/cljs task needs to be configured.")))
 
-    (deactivate [this build-id]
-      (when build-id
-        (log/infof "stopping figwheel. build-id: %s." build-id)
-        (figwheel/stop build-id)))))
+    (deactivate [this _]
+      (log/infof "stopping figwheel.")
+      (figwheel/stop-all))))
