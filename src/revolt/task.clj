@@ -210,6 +210,7 @@ Recognized options:
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (require 'cljs.build.api)
+
   (let [cljs-api  (find-ns 'cljs.build.api)
         build-fn  (ns-resolve cljs-api 'build)
         inputs-fn (ns-resolve cljs-api 'inputs)]
@@ -226,7 +227,7 @@ Recognized options:
 Compiles clojurescript files and saves created javascripts into target directory.
 Recognized options:
 
-  :optimizations - global optimization set on all builds (:none, :whitespace, :simple or :advanced)
+  :compiler - global clojurescript compiler options used for all builds
   :builds - collection of builds, where each build consists of:
 
             :id - build identifier
