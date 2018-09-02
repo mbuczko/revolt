@@ -44,7 +44,7 @@
         (when (and (.isFile file)
                    (not (excluded? file-path exclude-paths)))
           (let [relative-output (.relativize source-path file-path)
-                destination (io/file output-path relative-output)]
+                destination (io/file output-path (.toString relative-output))]
             (io/make-parents destination)
             (Files/copy file-path (.toPath destination) copy-options)))))))
 

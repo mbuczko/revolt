@@ -4,24 +4,26 @@
 
 
 (defn invoke
-  [ctx {:keys [builds optimizations]} classpaths target inputs-fn build-fn]
-
+  [ctx {:keys [builds compiler]} classpaths target inputs-fn build-fn]
   (let [assets (utils/ensure-relative-path target "assets")
-        output (utils/ensure-relative-path target "out")
-        opt-kw (keyword optimizations)]
+        output (utils/ensure-relative-path target "out")]
 
     (run!
      (fn [build]
        (utils/timed
-        (str "CLJS " (:id build))
+        (str "CLJS "  build)
         (build-fn (apply inputs-fn (:source-paths build))
                   (:compiler build))))
      (eduction
-      (map #(-> %
-                (update-in [:compiler :output-to] (partial utils/ensure-relative-path assets))
-                (update-in [:compiler :output-dir] (partial utils/ensure-relative-path (if (= opt-kw :advanced) output assets)))
-                (update-in [:compiler :optimizations] (fn [current given] (or given current :none)) opt-kw)
-                (as-> conf
-                    (utils/dissoc-maybe conf [:compiler :preloads] (= (-> conf :compiler :optimizations) :advanced)))))
+      (map #(let [conf (update % :compiler merge compiler)
+                  optm (keyword (or (-> conf :compiler :optimizations) "none"))
+                  adv? (= :advanced optm)]
+
+              (-> conf
+                  (utils/dissoc-maybe [:compiler :preloads] adv?)
+                  (update-in [:compiler :optimizations] (constantly optm))
+                  (update-in [:compiler :output-to] (partial utils/ensure-relative-path assets))
+                  (update-in [:compiler :output-dir] (partial utils/ensure-relative-path
+                                                                   (if adv? output assets))))))
       builds))
     ctx))

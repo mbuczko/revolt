@@ -68,10 +68,11 @@ stops working when JVM shuts down. Nothing more than that. Technically, plugins 
 Typical configuration looks like following:
 
 ```clojure
-{:revolt.plugin/nrepl {:port 5600}
- :revolt.plugin/rebel {:init-ns "foo.system"}
- :revolt.plugin/watch {:excluded-paths ["src/clj"]
-                       :on-change {:revolt.task/sass "glob:assets/styles/*.scss"}}}
+{:revolt.plugin/nrepl    {:port 5600}
+ :revolt.plugin/rebel    {:init-ns "foo.system"}
+ :revolt.plugin/figwheel {:builds ["main"]}
+ :revolt.plugin/watch    {:excluded-paths ["src/clj"]
+                          :on-change {:revolt.task/sass "glob:assets/styles/*.scss"}}}
 ```
 Right after activation plugins usually stay in a separate thread until deactivation phase hits them in a back which happens on JVM shutdown, triggered for example when plugin 
 running in a main thread (like `rebel`) gets interrupted.
@@ -121,13 +122,18 @@ To have even more fun, each task can be pre-configured in a very similar way as 
                     :source-uri "http://github.com/fuser/foo/blob/{version}/{filepath}#L{line}"
                     :namespaces [foo.main foo.core]}
 
-:revolt.task/cljs  {:builds [{:id "main-ui"
+:revolt.task/cljs  {:compiler {:optimizations :none
+                               :output-dir "scripts/out"
+                               :asset-path "/scripts/core"
+                               :preloads [devtools.preload]}
+                    :builds [{:id "main-ui"
                               :source-paths ["src/cljs"]
                               :compiler {:main "foo.main"
-                                         :output-to "scripts/main.js"
-                                         :output-dir "scripts/out"
-                                         :asset-path "/scripts/core"
-                                         :preloads [devtools.preload]}}]}
+                                         :output-to "scripts/main.js"}}]}
+
+:revolt.task/assets {:source-paths ["assets"]
+                     :output-dir "assets"
+                     :assets-holders ["js" "css" "html"]}
 
 :revolt.task/capsule {:exclude-paths #{"test" "src/cljs"}
                       :output-jar "dist/foo.jar"
@@ -212,22 +218,21 @@ at command line additional dependencies or classpaths to be resolved when applic
 Assuming clojurescript, nrepl and capsule for packaging as base tools being used, this is all we need in `deps.edn`: 
 
 ``` clojure
-{:aliases {:dev {:extra-deps  {defunkt/revolt {:mvn/version "0.1.7"}}
+{:aliases {:dev {:extra-deps  {defunkt/revolt {:mvn/version "1.0.0"}}
                  :extra-paths ["target/assets"]
                  :main-opts   ["-m" "revolt.bootstrap"
                                "-p" "nrepl,rebel"]}
 
            ;; dependencies for nrepl
-           :dev/nrepl {:extra-deps {org.clojure/tools.nrepl {:mvn/version "0.2.13"}
-                                    cider/cider-nrepl {:mvn/version "0.18.0-SNAPSHOT"}
+           :dev/nrepl {:extra-deps {cider/cider-nrepl {:mvn/version "0.18.0-SNAPSHOT"}
                                     refactor-nrepl {:mvn/version "2.4.0-SNAPSHOT"}}}
 
            ;; dependencies for clojurescript
            :dev/cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.238"}
                                    binaryage/devtools {:mvn/version "0.9.9"}
+                                   com.bhauman/figwheel-main {:mvn/version "0.1.9-SNAPSHOT"}
                                    re-frame {:mvn/version "0.10.5"}
-                                   reagent {:mvn/version "0.8.0-alpha2"}
-                                   figwheel-sidecar {:mvn/version "0.5.15"}}}
+                                   reagent {:mvn/version "0.8.0-alpha2"}}}
 
            ;; dependencies for packaging tasks
            :dev/pack {:extra-deps {co.paralleluniverse/capsule {:mvn/version "1.0.3"}

@@ -25,7 +25,7 @@
     ;; run SASS compilation for every single file found in
     ;; source-path, which file name does not start with _
 
-    (let [path (io/file (or file source-path))]
+    (let [path (io/file (str (or file source-path)))]
 
       (utils/timed
        (str "SASS " path)
