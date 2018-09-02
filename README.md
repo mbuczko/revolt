@@ -172,7 +172,7 @@ will be fetched on first run) with an heavy-optimized version of our clojurescri
 
 ``` clojure
 (def build (comp (partial capsule {:capsule-type :thin})
-                 (partial cljs {:optimizations :advanced})
+                 (partial cljs {:compiler {:optimizations :advanced}})
                  sass
                  info
                  clean))
