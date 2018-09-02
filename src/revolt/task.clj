@@ -217,7 +217,7 @@ Recognized options:
     (when (and build-fn inputs-fn)
       (reify Task
         (invoke [this input ctx]
-          (let [options (merge opts input)]
+          (let [options (merge-with merge opts input)]
             (cljs/invoke ctx options classpaths target inputs-fn build-fn)))
         (notify [this path ctx]
           (.invoke this path ctx))

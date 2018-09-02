@@ -44,14 +44,46 @@
   (when-let [root-dir (and relative-path (.toString (current-dir)))]
     (.toString (Paths/get root-dir (into-array [relative-path])))))
 
+(defn cons-nested
+  "Transforms stringified nested key and its value into a proper map,
+  eg. \"compiler.optimizations\" key with value \"advanced\" will be
+  transformed into a map {:compiler {:optimizations \"advanced\"}}"
+
+  [nk v]
+  (let [keys (rseq (str/split nk #"\."))]
+    (loop [[k & tail] keys, result nil]
+      (if-not k
+        result
+        (recur tail (hash-map (keyword k) (or result v)))))))
+
+(defn make-options-coll
+  "Transforms an equal-sign separated string into a {:option value} map.
+  For example: \"type=thin\" will be transformed into {:type \"thin\"}.
+
+  Options can be nested with a dot sign and will be turned into a nested maps,
+  so \"capsule.type=thin\" will be transformed into {:capsule {:type \"thin\"}}"
+
+  [options-str]
+  (let [opts (map #(str/split % #"=") options-str)]
+    (reduce (fn [reduced [nk v]]
+              (merge-with merge reduced (cons-nested nk v)))
+            {}
+            opts)))
+
 (defn make-params-coll
+  "Transforms a comma separated string of \"task1:options,task2:options\"
+  into a collection of vectors ([task1 options] [task2 options]]).
+
+  Options are colon separated tuples like \"type=thin:name=foo\", can be
+  nested with a dot sign, like \"capsule.type=thin\" and get transformed
+  into corresponding (possibly nested) maps."
+
   [params-str default-ns]
   (let [params (and params-str (.split params-str ","))]
     (reduce (fn [reduced param]
               (let [[p & opts] (.split param ":")]
                 (conj reduced [(ensure-ns default-ns p)
-                               (walk/keywordize-keys
-                                (into {} (map #(str/split % #"=") opts)))])))
+                               (make-options-coll opts)])))
             []
             params)))
 
