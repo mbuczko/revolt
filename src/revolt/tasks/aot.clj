@@ -7,8 +7,10 @@
 (defn compile-namespaces
   [namespaces]
   (doseq [namespace namespaces]
-    (log/debug "aot" namespace)
-    (compile namespace)))
+    (let [nstr (str namespace)]
+      (when-not (.startsWith nstr "revolt.")
+        (log/info "compiling" nstr)
+        (compile namespace)))))
 
 (defn invoke
   [ctx {:keys [extra-namespaces]} classpaths target]

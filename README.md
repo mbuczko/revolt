@@ -132,9 +132,8 @@ To have even more fun, each task can be pre-configured in a very similar way as 
                               :compiler {:main "foo.main"
                                          :output-to "scripts/main.js"}}]}
 
-:revolt.task/assets {:source-paths ["assets"]
-                     :output-dir "assets"
-                     :assets-holders ["js" "css" "html"]}
+:revolt.task/assets {:assets-paths ["assets"]
+                     :output-dir "assets"}
 
 :revolt.task/capsule {:exclude-paths #{"test" "src/cljs"}
                       :output-jar "dist/foo.jar"

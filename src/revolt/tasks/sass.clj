@@ -17,7 +17,7 @@
     file))
 
 (defn invoke
-  [ctx {:keys [source-path output-dir file options]} classpaths target]
+  [ctx {:keys [source-path output-dir file sass-options]} classpaths target]
 
   (let [assets-path (utils/ensure-relative-path target (str "assets" File/separator output-dir))
         source-path (Paths/get source-path (make-array String 0))]
@@ -37,6 +37,6 @@
              (sass/sass-compile-to-file
               file
               (io/file assets-path (str/replace relative-output #"\.scss$" ".css"))
-              options)))))
+              sass-options)))))
 
       (update ctx :before-pack-fns conj exclude-sass-pack-fn))))

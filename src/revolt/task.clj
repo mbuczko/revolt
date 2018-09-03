@@ -166,34 +166,40 @@ Cleans target directory.")))
     (describe [this]
       "CSS preprocessor.
 
-Takes preprocessed Sass files and saves them as CSS files into target directory.
-Recognized options:
+Takes Sass/Scss files and turns them into CSS ones.
+
+Options:
+--------
 
   :source-path - relative directory with sass/scss files to transform
   :output-dir - directory where to store generated CSS files
-  :options - sass compiler options
+  :sass-options - sass compiler options
 ")))
 
 (defmethod create-task ::assets [_ opts classpaths target]
-  (reify Task
-    (invoke [this input ctx]
-      (let [in (if (map? input)
-                 (merge opts input)
-                 (assoc opts :file input))]
-        (assets/invoke ctx in classpaths target)))
-    (notify [this path ctx]
-      (log/warn "Notification is not handled by \"assets\" task.")
-      ctx)
-    (describe [this]
-      "Static assets fingerprinter.
+  (let [default-opts {:update-with-exts ["js" "css" "html"]}
+        options (merge default-opts opts)]
+    (reify Task
+      (invoke [this input ctx]
+        (assets/invoke ctx (merge options input) classpaths target))
+      (notify [this path ctx]
+        (log/warn "Notification is not handled by \"assets\" task.")
+        ctx)
+      (describe [this]
+        "Static assets fingerprinter.
 
-Fingerprints assets and updates all references in related resources like HTMLs or styles.
-Recognized options:
+Fingerprints static assets like images, scripts or styles.
 
-  :source-paths - collection of assets paths
+Options:
+--------
+
+  :assets-paths - collection of paths with assets to fingerprint
   :exclude-paths - collection of paths to exclude from fingerprinting
-  :assets-holders - collection of extensions (like \"html\" or \"css\") of files that should be updated
-")))
+  :update-with-exts - extensions of files to update with new references to fingerprinted assets
+
+By default all javascripts, stylesheets and HTML files are scanned for references to
+fingerprinted assets. Any recognized reference is being replaced with fingerprinted version.
+"))))
 
 (defmethod create-task ::aot [_ opts classpaths target]
   (reify Task
@@ -202,8 +208,8 @@ Recognized options:
     (describe [this]
       "Ahead-Of-Time compilation.
 
-Compiles clojure namespaces and saves .class files into target directory.
-Recognized options:
+Options:
+--------
 
   :exta-namespaces - collection of additional namespaces to compile.
 ")))
@@ -222,10 +228,12 @@ Recognized options:
         (notify [this path ctx]
           (.invoke this nil ctx))
         (describe [this]
-          "CLJS compiler.
+          "CLJS compilation.
 
-Compiles clojurescript files and saves created javascripts into target directory.
-Recognized options:
+Turns clojurescripts into javascripts with help of ClojureScript compiler.
+
+Options:
+--------
 
   :compiler - global clojurescript compiler options used for all builds
   :builds - collection of builds, where each build consists of:
@@ -244,10 +252,10 @@ Recognized options:
       (notify [this path ctx]
         (.invoke this nil ctx))
       (describe [this]
-        "clojure.test runner.
+        "Clojure tests runner based on bat-test (https://github.com/metosin/bat-test).
 
-Clojure tests runner based on bat-test (https://github.com/metosin/bat-test).
-Recognized options:
+Options:
+--------
 
   :test-matcher - regex used to select test namespaces (defaults to #\".*test\")
   :parallel - whether to run tests in parallel (defaults to false)
@@ -264,10 +272,10 @@ Recognized options:
     (invoke [this input ctx]
       (codox/invoke ctx (merge opts input) target))
     (describe [this]
-      "API doc generator.
+      "API documentation generator.
 
-Generates API documentation with codox.
-Recognized options:
+Options:
+--------
 
   :name - project name, eg. \"edge\"
   :package - symbol describing project package, eg. defunkt.edge
@@ -283,8 +291,10 @@ Recognized options:
     (describe [this]
       "Project info generator.
 
-Generates map of project-specific information.
-Recognized options:
+Generates map of project-specific information used by other tasks.
+
+Options:
+--------
 
   :name - project name, eg. \"edge\"
   :package - symbol describing project package, eg defunkt.edge
@@ -300,14 +310,16 @@ Recognized options:
       "Capsule packager.
 
 Generates an uberjar-like capsule (http://www.capsule.io).
-Recognized options:
+
+Options:
+--------
 
   :exclude-paths - collection of project paths to exclude from capsule
   :output-jar - project-related path of output jar, eg. dist/foo.jar
   :capsule-type - type of capsule, one of :empty, :thin or :fat (defaults to :fat)
   :main - main class to be run
 
-Recognized capsule options (http://www.capsule.io/reference):
+Capsule options (http://www.capsule.io/reference):
 
   :min-java-version
   :min-update-version
