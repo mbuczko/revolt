@@ -220,7 +220,7 @@ Recognized options:
           (let [options (merge-with merge opts input)]
             (cljs/invoke ctx options classpaths target inputs-fn build-fn)))
         (notify [this path ctx]
-          (.invoke this path ctx))
+          (.invoke this nil ctx))
         (describe [this]
           "CLJS compiler.
 
@@ -236,12 +236,13 @@ Recognized options:
 ")))))
 
 (defmethod create-task ::test [_ opts classpaths target]
+  (System/setProperty "java.awt.headless" "true")
   (let [options (merge test/default-options opts)]
     (reify Task
       (invoke [this input ctx]
-        (merge ctx (test/invoke (merge options input))))
+        (test/invoke ctx (merge options input)))
       (notify [this path ctx]
-        (.invoke this path ctx))
+        (.invoke this nil ctx))
       (describe [this]
         "clojure.test runner.
 
