@@ -116,7 +116,8 @@ To have even more fun, each task can be pre-configured in a very similar way as 
 
 :revolt.task/test  {:report :pretty}
 
-:revolt.task/sass  {:resources ["styles/main.scss" "styles/login.scss"]}
+:revolt.task/sass  {:source-path "assets/styles"
+                    :output-dir "styles"}
 
 :revolt.task/codox {:source-paths ["src/clj"]
                     :source-uri "http://github.com/fuser/foo/blob/{version}/{filepath}#L{line}"
@@ -171,7 +172,7 @@ will be fetched on first run) with an heavy-optimized version of our clojurescri
 
 ``` clojure
 (def build (comp (partial capsule {:capsule-type :thin})
-                 (partial cljs {:optimizations :advanced})
+                 (partial cljs {:compiler {:optimizations :advanced}})
                  sass
                  info
                  clean))
