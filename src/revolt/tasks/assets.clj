@@ -38,12 +38,12 @@
 
 (defn copy-assets
   [path output-path exclude-paths]
-  (let [source-path (.toPath path)]
+  (let [assets-path (.toPath path)]
     (doseq [file (file-seq path)]
       (let [file-path (.toPath file)]
         (when (and (.isFile file)
                    (not (excluded? file-path exclude-paths)))
-          (let [relative-output (.relativize source-path file-path)
+          (let [relative-output (.relativize assets-path file-path)
                 destination (io/file output-path (.toString relative-output))]
             (io/make-parents destination)
             (Files/copy file-path (.toPath destination) copy-options)))))))
@@ -59,6 +59,7 @@
            :when (.isFile file)
            :let  [destination (io/file (.getParent file) (hashed-name file))]]
        (when (.renameTo file destination)
+         (log/infof "%s => %s" file destination)
          [(str (.relativize assets-path (.toPath file)))
           (str (.relativize assets-path (.toPath destination)))])))))
 
@@ -72,24 +73,24 @@
                (rest pat))))))
 
 (defn morph-resource
-  [assets-kv assets-holders patterns file entry-name]
+  [assets-kv extensions patterns file entry-name]
   (when (and file (not (assets-kv entry-name)))
-    (if (some #(.endsWith (.toLowerCase entry-name) %) assets-holders)
+    (if (some #(.endsWith (.toLowerCase entry-name) %) extensions)
       (let [tmp-file (File/createTempFile entry-name ".tmp")]
-        (log/debug "replacing references to fingerprinted resource in:" entry-name)
+        (log/info "looking for assets in:" entry-name)
         (.deleteOnExit tmp-file)
         (spit tmp-file (replace-all (slurp file) patterns))
         tmp-file)
       file)))
 
 (defn invoke
-  [ctx {:keys [source-paths exclude-paths assets-holders options]} classpaths target]
+  [ctx {:keys [assets-paths exclude-paths update-with-exts options]} classpaths target]
   (let [assets-path (utils/ensure-relative-path target "assets")
-        holders (map #(str "." (.toLowerCase %)) assets-holders)]
+        extensions (map #(str "." (.toLowerCase %)) update-with-exts)]
 
     (utils/timed
      "COPYING ASSETS"
-     (doseq [path (map io/file source-paths)]
+     (doseq [path (map io/file assets-paths)]
        (copy-assets path assets-path exclude-paths)))
 
     (utils/timed
@@ -99,4 +100,4 @@
 
        (-> ctx
            (assoc  :assets assets-kv)
-           (update :before-pack-fns conj (partial morph-resource assets-kv holders patterns)))))))
+           (update :before-pack-fns conj (partial morph-resource assets-kv extensions patterns)))))))

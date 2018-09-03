@@ -132,9 +132,8 @@ To have even more fun, each task can be pre-configured in a very similar way as 
                               :compiler {:main "foo.main"
                                          :output-to "scripts/main.js"}}]}
 
-:revolt.task/assets {:source-paths ["assets"]
-                     :output-dir "assets"
-                     :assets-holders ["js" "css" "html"]}
+:revolt.task/assets {:assets-paths ["assets"]
+                     :output-dir "assets"}
 
 :revolt.task/capsule {:exclude-paths #{"test" "src/cljs"}
                       :output-jar "dist/foo.jar"
@@ -219,7 +218,7 @@ at command line additional dependencies or classpaths to be resolved when applic
 Assuming clojurescript, nrepl and capsule for packaging as base tools being used, this is all we need in `deps.edn`: 
 
 ``` clojure
-{:aliases {:dev {:extra-deps  {defunkt/revolt {:mvn/version "1.0.0"}}
+{:aliases {:dev {:extra-deps  {defunkt/revolt {:mvn/version "1.1.0"}}
                  :extra-paths ["target/assets"]
                  :main-opts   ["-m" "revolt.bootstrap"
                                "-p" "nrepl,rebel"]}
