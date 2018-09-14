@@ -44,6 +44,15 @@
   (when-let [root-dir (and relative-path (.toString (current-dir)))]
     (.toString (Paths/get root-dir (into-array [relative-path])))))
 
+(defn ensure-relative-outputs
+  "Ensures that `:output-to` of each clojurescript module
+  is relative to given path."
+
+  [modules-kv path]
+  (apply merge
+   (for [[id module] modules-kv]
+     (hash-map id (update module :output-to (partial ensure-relative-path path))))))
+
 (defn cons-nested
   "Transforms stringified nested key and its value into a proper map,
   eg. \"compiler.optimizations\" key with value \"advanced\" will be

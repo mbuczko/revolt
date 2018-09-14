@@ -22,6 +22,9 @@
   (let [assets-path (utils/ensure-relative-path target (str "assets" File/separator output-dir))
         source-path (Paths/get source-path (make-array String 0))]
 
+    ;; ensure target is created
+    (.mkdirs (io/file assets-path))
+
     ;; run SASS compilation for every single file found in
     ;; source-path, which file name does not start with _
 

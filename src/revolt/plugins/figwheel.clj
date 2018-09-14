@@ -7,10 +7,13 @@
 
 (defn ensure-relative-builds-paths
   [builds target]
-  (let [ensure-relative (partial utils/ensure-relative-path target)]
+  (let [ensure-relative-fn (partial utils/ensure-relative-path target)]
     (map #(-> %
-              (update-in [:compiler :output-dir] ensure-relative)
-              (update-in [:compiler :output-to] ensure-relative))
+              (update-in [:compiler :output-dir] ensure-relative-fn)
+              (cond-> (-> % :compiler :output-to)
+                (update-in [:compiler :output-to] ensure-relative-fn))
+              (cond-> (-> % :compiler :modules)
+                (update-in [:compiler :modules] utils/ensure-relative-outputs target)))
          builds)))
 
 (defn merge-with-compiler-opts
