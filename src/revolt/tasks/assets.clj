@@ -56,7 +56,7 @@
     (filter
      (complement nil?)
      (for [file (file-seq assets-file)
-           :when (.isFile file)
+           :when (and (.isFile file) (not (.endsWith (.getName file) ".DS_Store")))
            :let  [destination (io/file (.getParent file) (hashed-name file))]]
        (when (.renameTo file destination)
          (log/infof "%s => %s" file destination)
