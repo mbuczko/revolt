@@ -166,7 +166,7 @@
 
 (defn add-classes-from-artifact
   [^JarOutputStream jar-stream artifact class-p]
-  (if-let [capsule-jar (first (filter #(.contains % artifact) (system-classpaths)))]
+  (if-let [capsule-jar (some #(when (.contains % artifact) %) (system-classpaths))]
     (with-open [capsule-is  (io/input-stream capsule-jar)
                 capsule-jis (JarInputStream. capsule-is)]
       (loop [^JarEntry entry (.getNextJarEntry capsule-jis)]
