@@ -5,7 +5,7 @@
                    [org.clojure/tools.cli "0.3.5"]
                    [org.clojure/tools.logging "0.4.1"]
                    [org.clojure/tools.namespace "0.3.0-alpha4"]
-                   [org.clojure/tools.deps.alpha "0.5.435" :exclusions [org.slf4j/slf4j-nop]]
+                   [org.clojure/tools.deps.alpha "0.5.460" :exclusions [org.slf4j/slf4j-nop]]
                    [com.bhauman/rebel-readline "0.1.3"]
                    [net.sf.jpathwatch/jpathwatch "0.95"]
                    [io.aviso/pretty "0.1.34"]
@@ -19,7 +19,7 @@
 ;; to check the newest versions:
 ;; boot -d boot-deps ancient
 
-(def +version+ "1.1.0")
+(def +version+ "1.2.0")
 
 (require
  '[clojure.tools.namespace.repl]
