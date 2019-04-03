@@ -197,7 +197,7 @@ Options:
   :exclude-paths - collection of paths to exclude from fingerprinting
   :update-with-exts - extensions of files to update with new references to fingerprinted assets
 
-By default all javascripts, stylesheets and HTML files are scanned for references to
+By default all javascripts, stylesheets and HTML resources are scanned for references to
 fingerprinted assets. Any recognized reference is being replaced with fingerprinted version.
 "))))
 
@@ -258,12 +258,13 @@ Options:
 --------
 
   :test-matcher - regex used to select test namespaces (defaults to #\".*test\")
-  :parallel - whether to run tests in parallel (defaults to false)
+  :parallel - run tests in parallel? (defaults to false)
   :report - reporting function (:pretty, :progress or :junit)
   :filter - function to filter the test vars
+  :notify - sound notification? (defaults to true)
   :on-start - function to be called before running tests (after reloading namespaces)
   :on-end - function to be called after running tests
-  :cloverage - whether to enable Cloverage coverage report (defaults to false)
+  :cloverage - enable Cloverage coverage report? (defaults to false)
   :cloverage-opts - Cloverage options (defaults to nil)
 "))))
 
@@ -281,7 +282,7 @@ Options:
   :package - symbol describing project package, eg. defunkt.edge
   :version - project version, eg. \"1.2.0\"
   :description - project description to be shown
-  :namespace - collection of namespaces to document (by default all namespaces are taken)
+  :namespaces - collection of namespaces to document (by default all namespaces are taken)
 ")))
 
 (defmethod create-task ::info [_ opts classpaths target]
@@ -314,9 +315,9 @@ Generates an uberjar-like capsule (http://www.capsule.io).
 Options:
 --------
 
-  :exclude-paths - collection of project paths to exclude from capsule
-  :output-jar - project-related path of output jar, eg. dist/foo.jar
   :capsule-type - type of capsule, one of :empty, :thin or :fat (defaults to :fat)
+  :exclude-paths - collection of project paths to exclude from capsule
+  :output-jar - project related path of output jar, eg. dist/foo.jar
   :main - main class to be run
 
 Capsule options (http://www.capsule.io/reference):

@@ -17,7 +17,6 @@
 
 (defn invoke
   [ctx {:keys [source-path output-dir file sass-options]} classpaths target]
-
   (let [assets-path (utils/ensure-relative-path target (str "assets" File/separator output-dir))
         source-path (Paths/get source-path (make-array String 0))]
 

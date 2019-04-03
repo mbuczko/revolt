@@ -178,7 +178,7 @@ will be fetched on first run) with an heavy-optimized version of our clojurescri
 ```
 Now, as we know already how tasks work in general and how additional argument may extend or alter their base configuration, the question is how can we get these precious tasks into our hands?
 
-Well, quite easy actually. As mentioned before, tasks are denoted by qualified keywords, like `:revolt.task/capsule`. All we need is now to _require-a-task_ :
+Well, quite easy actually. As mentioned before, tasks are denoted by qualified keywords like `:revolt.task/capsule`. All we need is now to _require-a-task_ :
 
 ``` clojure
 (require '[revolt.task :as t])  ;; we need a task namespace first
@@ -209,6 +209,20 @@ or to save unnecessary typing and load a bunch of tasks at once with `require-al
 
 `require-task` and `require-all` are simple ways to dynamically load tasks we want to play with and by chance turn our REPLs into training ground where all tasks are impatiently waiting to be
 used and abused :)
+
+Following is the complete list of built-in tasks:
+
+| task   | description                        | parameters                                                                                   |
+|--------|------------------------------------|----------------------------------------------------------------------------------------------|
+| clean  | cleans target directory            |                                                                                              |
+| sass   | converts sass/scss assets into CSS |`:source-path`  directory with sass/scss files to transform<br>`:output-dir` directory where to store generated CSSes<br>`:sass-options` additional sass-compiler options:<br>⇒ `:source-map` (bool) Enable source-maps for compiled CSS<br>⇒ `:output-style` :nested, :compact, :expanded or :compressed|
+| assets | fingerprints static assets like images, scripts or styles |`:assets-path` collection of paths with assets to fingerprint<br>`:exclude-paths` collection of paths to exclude from fingerprinting<br>`:update-with-exts` extensions of files to update with new references to fingerprinted assets<br><br>By default all javascripts, stylesheets and HTML resources are scanned for references to fingerprinted assets. Any recognized reference is being replaced with fingerprinted version.|
+| aot    | Ahead-Of-Time compilation          |`:exta-namespaces` collection of additional namespaces to compile                             |
+| cljs   | clojurescript compiler             |`:compiler` global clojurescript [compiler options](https://clojurescript.org/reference/compiler-options) used for all builds<br>`:builds` collection of builds, where each build consists of:<br>⇒ `:id` build identifier<br>⇒ `:source-paths` project-relative path of clojurescript files to compile<br>⇒ `:compiler` - clojurescript [compiler options](https://clojurescript.org/reference/compiler-options)|
+| test   | clojure.test runner                |`:notify` enable sound notification? (defaults to true)<br>`:parallel` run tests in parallel? (defaults to false)<br>`:test-matcher` regex used to select test namespaces (defaults to #\".*test\")<br>`:report` reporting function (:pretty, :<zero-width space>progress or :junit)<br>`:filter` fn to filter the test vars<br>`:on-start` fn to call before running tests (after reloading namespaces)<br>`:on-end` fn to call after running tests<br>`:cloverage` enable Cloverage coverage report? (defaults to false)<br>`:cloverage-opts` Cloverage options (defaults to nil)|
+| codox  | API documentation generator        |`:name` project name, eg. "edge"<br>`:package` symbol describing project package, eg. defunkt.edge<br>`:version` project version, eg. "1.2.0"<br>`:description`  project description to be shown<br>`:namespaces` collection of namespaces to document (by default all ns-es)|
+| info   | generates project information      |`:name` project name, eg. "edge"<br>`:package` symbol describing project package, eg. defunkt.edge<br>`:version` project version, eg. "1.2.0"|
+|capsule | generates an uberjar-like capsule  |`:capsule-type` capsule type, one of `:empty`, `:thin` or `:fat` (defaults to `:fat`)<br>`:exclude-paths` collection of project paths to exclude from capsule<br>`:output-jar` project related path of output jar, eg. dist/foo.jar<br>`:main` - main class to be run<br><br>[Capsule options](http://www.capsule.io/reference):<br>  `:min-java-version`<br> `:min-update-version`<br> `:java-version`<br> `:jdk-required?`<br>  `:jvm-args`<br>  `:environment-variables`<br>  `:system-properties`<br>  `:security-manager`<br>  `:security-policy`<br>  `:security-policy-appended`<br>  `:java-agents`<br> `:native-agents`<br>  `:native-dependencies`<br>  `:capsule-log-level`|
 
 
 ## Usage
