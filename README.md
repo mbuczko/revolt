@@ -117,7 +117,7 @@ To have even more fun, each task can be pre-configured in a very similar way as 
 :revolt.task/test  {:report :pretty}
 
 :revolt.task/sass  {:source-path "assets/styles"
-                    :output-dir "styles"}
+                    :output-path "styles"}
 
 :revolt.task/codox {:source-paths ["src/clj"]
                     :source-uri "http://github.com/fuser/foo/blob/{version}/{filepath}#L{line}"
@@ -132,8 +132,7 @@ To have even more fun, each task can be pre-configured in a very similar way as 
                               :compiler {:main "foo.main"
                                          :output-to "scripts/main.js"}}]}
 
-:revolt.task/assets {:assets-paths ["assets"]
-                     :output-dir "assets"}
+:revolt.task/assets {:assets-paths ["assets"]}
 
 :revolt.task/capsule {:exclude-paths #{"test" "src/cljs"}
                       :output-jar "dist/foo.jar"
@@ -215,7 +214,7 @@ Following is the complete list of built-in tasks:
 | task   | description                        | parameters                                                                                   |
 |--------|------------------------------------|----------------------------------------------------------------------------------------------|
 | clean  | cleans target directory            |                                                                                              |
-| sass   | converts sass/scss assets into CSS |`:source-path`  directory with sass/scss files to transform<br>`:output-dir` directory where to store generated CSSes<br>`:sass-options` additional sass-compiler options:<br>⇒ `:source-map` (bool) Enable source-maps for compiled CSS<br>⇒ `:output-style` :nested, :compact, :expanded or :compressed|
+| sass   | converts sass/scss assets into CSS |`:source-path`  directory with sass/scss resources to transform<br>`:output-path` directory where to store generated CSSes<br>`:sass-options` additional sass-compiler options:<br>⇒ `:source-map` (bool) Enable source-maps for compiled CSS<br>⇒ `:output-style` :nested, :compact, :expanded or :compressed|
 | assets | fingerprints static assets like images, scripts or styles |`:assets-path` collection of paths with assets to fingerprint<br>`:exclude-paths` collection of paths to exclude from fingerprinting<br>`:update-with-exts` extensions of files to update with new references to fingerprinted assets<br><br>By default all javascripts, stylesheets and HTML resources are scanned for references to fingerprinted assets. Any recognized reference is being replaced with fingerprinted version.|
 | aot    | Ahead-Of-Time compilation          |`:exta-namespaces` collection of additional namespaces to compile                             |
 | cljs   | clojurescript compiler             |`:compiler` global clojurescript [compiler options](https://clojurescript.org/reference/compiler-options) used for all builds<br>`:builds` collection of builds, where each build consists of:<br>⇒ `:id` build identifier<br>⇒ `:source-paths` project-relative path of clojurescript files to compile<br>⇒ `:compiler` - clojurescript [compiler options](https://clojurescript.org/reference/compiler-options)|

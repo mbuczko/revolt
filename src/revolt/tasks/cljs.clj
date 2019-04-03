@@ -1,6 +1,5 @@
 (ns revolt.tasks.cljs
-  (:require [clojure.tools.logging :as log]
-            [revolt.utils :as utils]))
+  (:require [revolt.utils :as utils]))
 
 (defn invoke
   [ctx {:keys [builds compiler]} classpaths target inputs-fn build-fn]

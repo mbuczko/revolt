@@ -171,8 +171,8 @@ Takes Sass/Scss files and turns them into CSS ones.
 Options:
 --------
 
-  :source-path - relative directory with sass/scss files to transform
-  :output-dir - directory where to store generated CSS files
+  :source-path - relative directory with sass/scss resources to transform
+  :output-path - directory where to store generated CSSes
   :sass-options - sass compiler options
 ")))
 

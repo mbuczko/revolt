@@ -84,7 +84,7 @@
       file)))
 
 (defn invoke
-  [ctx {:keys [assets-paths exclude-paths update-with-exts options]} classpaths target]
+  [ctx {:keys [assets-paths exclude-paths update-with-exts]} classpaths target]
   (let [assets-path (utils/ensure-relative-path target "assets")
         extensions (map #(str "." (.toLowerCase %)) update-with-exts)]
 
