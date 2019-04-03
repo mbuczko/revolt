@@ -148,25 +148,25 @@ To have even more fun, each task can be pre-configured in a very similar way as 
 Let's talk about task arguments now.
 
 Having tasks configured doesn't mean they are sealed and can't be extended in current REPL session any more. Let's look at the `sass` task as an example. Although it generates CSSes based on
-configured `:resources`, as all other tasks this one also accepts an argument which can be one of following types:
+configured `:source-path`, as all other tasks this one also accepts an argument which can be one of following types:
 
  - A keyword. This type of arguments is automatically handled by _revolt_. As for now only `:describe` responds - returns a human readable description of given task.
  - A `java.nio.file.Path`. This type of arguments is also automatically handled by _revolt_ and is considered as a notification that particular file has been changed and task should react upon. 
  `sass` task uses path to filter already configured `:resources` and rebuilds only a subset of SCSSes (if possible).
- - A map. Actually it's up to tasks how to handle incoming map argument, by convension _revolt_ simply merges incoming map into existing configuration:
+ - A map. Here it's up to task how to handle this kind of argument, by convension _revolt_ simply merges provided map into existing configuration:
 
 ``` clojure
 (info {:environment :testing})
 ⇒ {:name "foo", :package "bar.bazz", :version "0.0.1", :description "My awesome project", :environment :testing}
 ```
 
-It is often convenient to provide argument in a composition with help of `partial` function:
+Sometimes, in particular when tasks are composed together, it may be useful to provide argument with help of `partial` function:
 
 ``` clojure
 (def build (comp capsule cljs sass (partial info {:environment :testing}) clean))
 ```
 
-Why this is so convenient? Because this way we can tinker with our builds and packaging in a REPL without changing a single line of base configuration. Eg. to generate a thin capsule (where dependencies
+This way we can tinker with our builds and packaging in a REPL without changing a single line of base configuration. Eg. to generate a thin capsule (where dependencies
 will be fetched on first run) with an heavy-optimized version of our clojurescripts, we can construct a following pipeline:
 
 ``` clojure
@@ -176,9 +176,9 @@ will be fetched on first run) with an heavy-optimized version of our clojurescri
                  info
                  clean))
 ```
-Alright, so we know already how tasks work in general and how additional argument may extend their base configuration. Now, the question is how can we get these tasks into our hands?
+Now, as we know already how tasks work in general and how additional argument may extend or alter their base configuration, the question is how can we get these precious tasks into our hands?
 
-Well, quite easy. As mentioned before, tasks are denoted by qualified keywords, like `:revolt.task/capsule`. All we need is now to _require-a-task_ :
+Well, quite easy actually. As mentioned before, tasks are denoted by qualified keywords, like `:revolt.task/capsule`. All we need is now to _require-a-task_ :
 
 ``` clojure
 (require '[revolt.task :as t])  ;; we need a task namespace first

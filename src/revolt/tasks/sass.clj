@@ -2,7 +2,6 @@
   (:require [sass4clj.core :as sass]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
             [revolt.utils :as utils])
   (:import  (java.io File)
             (java.nio.file Paths)))
