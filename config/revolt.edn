@@ -1,0 +1,8 @@
+{:revolt.task/info  {:name "revolt"
+                     :package defunkt
+                     :version "1.3.0-SNAPSHOT"
+                     :description "Your trampoline to Clojure dev toolbox"}
+ :revolt.task/clean {:extra-paths ["dist"]}
+ :revolt.task/jar   {:exclude-paths #{"test" "config"}}
+
+ :revolt.plugin/nrepl {:port 5600}}
