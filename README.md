@@ -234,14 +234,14 @@ at command line additional dependencies or classpaths to be resolved when applic
 Assuming clojurescript, nrepl and capsule for packaging as base tools being used, this is all we need in `deps.edn`: 
 
 ``` clojure
-{:aliases {:dev {:extra-deps  {defunkt/revolt {:mvn/version "1.1.0"}}
+{:aliases {:dev {:extra-deps  {defunkt/revolt {:mvn/version "1.3.0"}}
                  :extra-paths ["target/assets"]
                  :main-opts   ["-m" "revolt.bootstrap"
                                "-p" "nrepl,rebel"]}
 
            ;; dependencies for nrepl
-           :dev/nrepl {:extra-deps {cider/cider-nrepl {:mvn/version "0.18.0-SNAPSHOT"}
-                                    refactor-nrepl {:mvn/version "2.4.0-SNAPSHOT"}}}
+           :dev/nrepl {:extra-deps {cider/cider-nrepl {:mvn/version "0.21.0"}
+                                    refactor-nrepl {:mvn/version "2.4.0"}}}
 
            ;; dependencies for clojurescript
            :dev/cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.238"}
