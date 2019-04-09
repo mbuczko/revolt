@@ -22,8 +22,8 @@
   "Creates a plugin straight from qualified keyword.
 
   Loads a corresponding namespace form qualified keyword and invokes
-  `create-plugin` multi-method with qualified keyword as a dispatch value,
-  passing plugin configuration as a second argument."
+  `create-plugin` multi-method with keyword itself as a dispatch value,
+  passing predefined plugin configuration as a second argument."
 
   [kw config]
   (log/debug "loading plugin" kw)

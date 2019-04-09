@@ -1,8 +1,6 @@
 (ns revolt.tasks.info
   (:require [revolt.shell :refer [git]]
-            [revolt.utils :as utils]
-            [clojure.java.io :as io]
-            [clojure.tools.logging :as log]))
+            [revolt.utils :as utils]))
 
 (def ^:private datetime-formatter
   (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd HH:mm:ss"))

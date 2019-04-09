@@ -1,19 +1,17 @@
 (ns revolt.tasks.capsule
   (:require [clojure.tools.deps.alpha :as tools.deps]
             [clojure.tools.deps.alpha.reader :as tools.deps.reader]
-            [clojure.tools.deps.alpha.script.make-classpath]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
+            [revolt.tasks.jar :as jar]
             [revolt.utils :as utils])
-  (:import  (java.io File InputStream ByteArrayOutputStream)
-            (java.net URLClassLoader)
-            (java.util.jar Attributes$Name JarEntry JarOutputStream JarInputStream Manifest JarFile)
-            (java.util.zip ZipEntry)))
+  (:import  (java.io File)
+            (java.util.jar Attributes$Name JarEntry JarOutputStream JarFile)))
 
 (def ^:const capsule-group         "co/paralleluniverse")
-(def ^:const capsule-default-name  "Capsule")
 (def ^:const capsule-default-class "Capsule.class")
+(def ^:const capsule-default-name  "Capsule")
 (def ^:const capsule-maven-class   "MavenCapsule.class")
 
 (def ^:const capsule-params {:min-java-version "Min-Java-Version"
@@ -30,18 +28,6 @@
                              :native-agents "Native-Agents"
                              :native-dependencies "Native-Dependencies"
                              :capsule-log-level "Capsule-Log-Level"})
-
-(defn filter-paths
-  [paths to-exclude]
-  (cond
-    (set? to-exclude)
-    (filterv #(not (contains? to-exclude %)) paths)
-
-    (= (type to-exclude) java.util.regex.Pattern)
-    (filterv #(not (re-matches to-exclude %)) paths)
-
-    :else
-    paths))
 
 (defn- reduce-caplets
   [manifest caplets]
@@ -72,16 +58,7 @@
           initial
           (keys config)))
 
-(defn- resolve-sibling-paths
-  [paths root]
-  (map #(.resolveSibling root %) paths))
-
-(def system-classpaths
-  (memoize (fn []
-             (map (memfn getFile)
-                  (.getURLs (URLClassLoader/getSystemClassLoader))))))
-
-(defn config->application-manifest
+(defn config->capsule-manifest
   "Converts task parameters to capsule manifest tuples."
 
   [{:keys [caplets scripts main args] :as config} application version]
@@ -97,113 +74,34 @@
       (cond-> scripts
         (reduce-scripts scripts))))
 
-(defn dir->relative-entries
-  "Returns a collection of [file relative-path] tuples for each file
-  inside directory and all its nested subdirectories.
-
-  `relative-path` is relative to dir itself."
-
-  [dir]
-  (when-let [root-path (and (not= (.getName dir) "capsule") (.toPath dir))]
-    (->> (file-seq dir)
-         (map io/file)
-         (filter (memfn isFile))
-         (filter #(not= (.getName %) ".DS_Store"))
-         (map (juxt identity #(-> root-path
-                                  (.relativize (.toPath %))
-                                  (.toString)))))))
-
-(defn before-add-path-hook
-  "Pushes file through stack of handlers right before adding it to a jar.
-
-  Each handler is a function of two parameters: a file and jar entry-name and
-  should return a file (same as received or some other) which is passed to the
-  next handler.
-
-  Handler may return a nil which means that file should not be added to resulting
-  uberjar (capsule)."
-
-  [file entry-name handlers]
-  (loop [input file, handlers handlers]
-    (let [handler (first handlers)]
-      (if-not handler
-        input
-        (recur (handler input entry-name)
-               (rest handlers))))))
-
-(defn create-jar-entry
-  "Creates a new entry in a jar out of given name and InputStream."
-
-  [name ^InputStream input-stream ^JarOutputStream jar-stream]
-  (log/debug "adding to jar:" name)
-  (.putNextEntry jar-stream (ZipEntry. name))
-  (io/copy input-stream jar-stream)
-  (doto jar-stream (.closeEntry)))
-
-(defn add-to-jar
-  "Adds new entry to jar file.
-
-  Acts as a safe proxy to `create-jar-entry` by creating and safely
-  closing entry InputStream."
-
-  [name input ^JarOutputStream jar-stream]
-  (with-open [input-stream (io/input-stream input)]
-    (create-jar-entry name input-stream jar-stream)))
-
-(defn add-manifest
-  "Adds a manifest entry to the jar file."
-
-  [^JarOutputStream jar-stream manifest-tuples]
-  (let [manifest (Manifest.)
-        attributes (.getMainAttributes manifest)]
-    (.put attributes Attributes$Name/MANIFEST_VERSION "1.0")
-    (.put attributes Attributes$Name/MAIN_CLASS capsule-default-name)
-    (doseq [[k v] manifest-tuples]
-      (.put attributes (Attributes$Name. k) v))
-    (let [baos (ByteArrayOutputStream.)]
-      (.write manifest baos)
-      (add-to-jar JarFile/MANIFEST_NAME (.toByteArray baos) jar-stream))))
-
-(defn add-classes-from-artifact
-  [^JarOutputStream jar-stream artifact class-p]
-  (if-let [capsule-jar (some #(when (.contains % artifact) %) (system-classpaths))]
-    (with-open [capsule-is  (io/input-stream capsule-jar)
-                capsule-jis (JarInputStream. capsule-is)]
-      (loop [^JarEntry entry (.getNextJarEntry capsule-jis)]
-        (if-not entry
-          jar-stream
-          (let [entry-name (.getName entry)]
-            (when (class-p entry)
-              (create-jar-entry entry-name capsule-jis jar-stream))
-            (recur (.getNextJarEntry capsule-jis))))))
-    (throw (Exception. "No capsule jar found. Check for co.paralleluniverse/capsule in dependencies."))))
-
 (defn add-capsule-class
   [^JarOutputStream jar-stream]
-  (add-classes-from-artifact jar-stream
-                             (str capsule-group "/capsule/")
-                             (fn [^JarEntry entry]
-                               (= (.getName entry) capsule-default-class))))
+  (jar/add-classes-from-artifact
+   jar-stream
+   (str capsule-group "/capsule/")
+   (fn [^JarEntry entry]
+     (= (.getName entry) capsule-default-class))))
 
 (defn add-maven-caplet-classes
   [^JarOutputStream jar-stream]
-  (add-classes-from-artifact jar-stream
-                             (str capsule-group "/capsule-maven/")
-                             (fn [^JarEntry entry]
-                               (let [entry-name (.getName entry)]
-                                 (or (.startsWith entry-name "capsule")
-                                     (= entry-name capsule-maven-class))))))
+  (jar/add-classes-from-artifact
+   jar-stream
+   (str capsule-group "/capsule-maven/")
+   (fn [^JarEntry entry]
+     (let [entry-name (.getName entry)]
+       (or (.startsWith entry-name "capsule")
+           (= entry-name capsule-maven-class))))))
 
 (defn add-caplets-jars
   [^JarOutputStream jar-stream caplets]
   (doseq [caplet (filter #(not= "MavenCapsule" %) caplets)]
     (let [[group artifact-id version] (.split caplet ":")
           clpath (str (str/replace group #"\." "/") "/" artifact-id "/" version)]
-      (when-let [caplet-jar (->> (system-classpaths)
+      (when-let [caplet-jar (->> (jar/system-classpaths)
                                  (filter #(.contains % clpath))
                                  (first)
                                  (io/file))]
-        (add-to-jar (.getName caplet-jar) caplet-jar jar-stream))))
+        (jar/add-to-jar (.getName caplet-jar) caplet-jar jar-stream))))
   jar-stream)
 
 (defn add-dependencies
@@ -212,23 +110,7 @@
                    (map io/file)
                    (filter #(and (.isFile %)
                                  (.endsWith (.getName %) ".jar"))))]
-    (add-to-jar (.getName dep) dep jar-stream))
-  jar-stream)
-
-(defn add-paths
-  [^JarOutputStream jar-stream classpaths aot? before-pack-fns]
-  (try
-    (doseq [[file name] (->> classpaths
-                             (map io/file)
-                             (filter (memfn isDirectory))
-                             (mapcat dir->relative-entries))
-            :when (not (and aot? (.endsWith name ".clj")))]
-
-      (when-let [resource (before-add-path-hook file name before-pack-fns)]
-        (add-to-jar name resource jar-stream)))
-
-    (catch Exception e
-      (log/error (.getMessage e))))
+    (jar/add-to-jar (.getName dep) dep jar-stream))
   jar-stream)
 
 (defn ensure-runtime-deps
@@ -263,7 +145,7 @@
   [^JarOutputStream jar-stream application classpath manifest deps caplets capsule-type {:keys [aot? before-pack-fns]}]
   (let [classpaths (str/split classpath (re-pattern File/pathSeparator))]
     (-> jar-stream
-        (add-manifest (ensure-runtime-deps application manifest deps capsule-type))
+        (jar/add-manifest (ensure-runtime-deps application manifest deps capsule-type) capsule-default-name)
         (add-capsule-class)
         (add-caplets-jars caplets)
 
@@ -271,7 +153,7 @@
         ;; :thin capsule has only application dependecies included.
 
         (cond-> (not= capsule-type :empty)
-          (add-paths classpaths aot? before-pack-fns))
+          (jar/add-paths classpaths aot? before-pack-fns))
 
         ;; :fat capsule has all dependecies included.
         ;; it's simply self-contained uberjar.
@@ -290,10 +172,9 @@
 
 (defn invoke
   [ctx {:keys [exclude-paths extra-paths capsule-type output-jar name package version] :as config} target]
-
-  (let [artifact-id (:name ctx name)
-        group-id    (:package ctx package)
-        version     (:version ctx version)
+  (let [artifact-id (or name (:name ctx))
+        group-id    (or package (:package ctx))
+        version     (or version (:version ctx))
         caps-type   (or capsule-type :fat)]
 
     (if-let [application (and artifact-id group-id (str group-id ":" artifact-id))]
@@ -302,19 +183,19 @@
        (let [deps-edn  (io/file "deps.edn")
              deps-map  (-> deps-edn
                            (tools.deps.reader/slurp-deps)
-                           (update :paths filter-paths exclude-paths)
-                           (assoc  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
-                                               "clojars" {:url "https://repo.clojars.org/"}}))
+                           (update :paths utils/filter-paths exclude-paths)
+                           (update :mvn/repos merge jar/default-mvn-repos))
              deps-path (.. deps-edn toPath toAbsolutePath)
              classpath (tools.deps/make-classpath
                         (tools.deps/resolve-deps deps-map nil)
-                        (resolve-sibling-paths (:paths deps-map) deps-path)
+                        (utils/resolve-sibling-paths (:paths deps-map) deps-path)
                         {:extra-paths (->> ["classes" "assets"]
                                            (map (partial utils/ensure-relative-path target))
                                            (concat extra-paths)
                                            (map utils/ensure-absolute-path)
                                            (filter (complement nil?)))})
-             jar-file  (io/file output-jar)]
+             output-jar (or output-jar (jar/default-output-jar artifact-id version))
+             jar-file   (io/file output-jar)]
 
          ;; ensure that all directories in a path are created
          (io/make-parents jar-file)
@@ -324,16 +205,16 @@
              (build-jar jar-stream
                         application
                         classpath
-                        (config->application-manifest config application version)
+                        (config->capsule-manifest config application version)
                         (:deps deps-map)
                         (into #{} (keys (:caplets config)))
                         (keyword caps-type)
                         ctx)
 
              (catch Throwable t
-               (log/errorf "Error while creating a jar file: %s" (.getMessage t))))
+               (log/errorf "Error while creating a capsule file: %s" (.getMessage t))))
 
            ;; return capsule location as a result
-           (assoc ctx :uberjar output-jar))))
+           (assoc ctx :jar-file output-jar))))
 
       (throw (Exception. "No 'name' or 'package' parameters provided in task configuration and context.")))))

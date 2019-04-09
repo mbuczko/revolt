@@ -14,10 +14,7 @@
 
 (defn invoke
   [ctx {:keys [extra-namespaces]} classpaths target]
-
   (let [classes (utils/ensure-relative-path target "classes")]
-
-    ;; ensure target is created
     (.mkdirs (io/file classes))
 
     (utils/timed
@@ -26,10 +23,6 @@
        (doseq [cp classpaths
                :when (.isDirectory cp)
                :let  [namespaces (tnfind/find-namespaces-in-dir cp)]]
-
          (compile-namespaces namespaces))
-
-       ;; compile additional namespaces (if any)
        (compile-namespaces extra-namespaces)))
-
     (assoc ctx :aot? true)))
