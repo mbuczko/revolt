@@ -197,7 +197,7 @@
       (aot/invoke ctx (merge opts input) classpaths target))
     (describe [this]
       (make-description "Ahead-Of-Time compilation" "Compiles project namespaces."
-                        :exta-namespaces "collection of additional namespaces to compile"))))
+                        :extra-namespaces "collection of additional namespaces to compile"))))
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (require 'cljs.build.api)
