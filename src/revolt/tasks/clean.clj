@@ -1,5 +1,6 @@
 (ns revolt.tasks.clean
-  (:require [revolt.utils :as utils]))
+  (:require [revolt.utils :as utils]
+            [clojure.tools.logging :as log]))
 
 (defn delete-files-recursively
   [fname & [silently]]
@@ -11,11 +12,11 @@
     (delete-f (clojure.java.io/file fname))))
 
 (defn invoke
-  [ctx input target]
+  [ctx {:keys [extra-paths]} target]
   (utils/timed
    (str "CLEAN " target)
-   (do
-     (doseq [dir [target "out"]]
-       (delete-files-recursively dir true))
-
-     (assoc ctx :target-cleaned? true))))
+   (let [paths (into extra-paths [target "out"])]
+     (doseq [p paths]
+       (log/info "Cleaning path:" p)
+       (delete-files-recursively p true))
+     ctx)))

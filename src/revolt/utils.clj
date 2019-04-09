@@ -3,8 +3,7 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.tools.logging :as log]
-            [clojure.walk :as walk])
+            [clojure.tools.logging :as log])
   (:import  (java.nio.file Paths)
             (java.io File)
             (java.security MessageDigest)))
@@ -16,6 +15,22 @@
                   .toPath
                   .toAbsolutePath)
              paths)))
+
+(defn filter-paths
+  [paths to-exclude]
+  (cond
+    (set? to-exclude)
+    (filterv #(not (contains? to-exclude %)) paths)
+
+    (= (type to-exclude) java.util.regex.Pattern)
+    (filterv #(not (re-matches to-exclude %)) paths)
+
+    :else
+    paths))
+
+(defn resolve-sibling-paths
+  [paths root]
+  (map #(.resolveSibling root %) paths))
 
 (defn current-dir
   ([]

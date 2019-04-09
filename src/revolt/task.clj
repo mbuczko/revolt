@@ -2,9 +2,9 @@
   "A home namespace for built-in tasks along with initialization functions."
 
   (:require [io.aviso.ansi]
-            [clojure.string :as str]
             [revolt.context :as context]
             [revolt.tasks.aot :as aot]
+            [revolt.tasks.jar :as jar]
             [revolt.tasks.cljs :as cljs]
             [revolt.tasks.sass :as sass]
             [revolt.tasks.test :as test]
@@ -14,7 +14,8 @@
             [revolt.tasks.assets :as assets]
             [revolt.tasks.capsule :as capsule]
             [revolt.utils :as utils]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure.string :as str]))
 
 (defprotocol Task
   (invoke   [this input ctx] "Runs task with provided input data and pipelined context.")
@@ -143,16 +144,22 @@
                    context))
         context))))
 
+(defn make-description
+  "Composes a task information based on title, description and list of parameters."
+
+  [title description & params]
+  (let [pstr (for [[k d] (partition 2 params)] (format "  %-20s | %s", k d))]
+    (str title "\n\n" description "\n\n" (str/join "\n" pstr) "\n")))
+
 ;; built-in tasks
 
 (defmethod create-task ::clean [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
-      (clean/invoke ctx input target))
+      (clean/invoke ctx (merge opts input) target))
     (describe [this]
-      "Target directory cleaner.
-
-Cleans target directory.")))
+      (make-description "Target directory cleaner" "Cleans target directory."
+                        :extra-paths "additional paths to clean"))))
 
 (defmethod create-task ::sass [_ opts classpaths target]
   (reify Task
@@ -164,17 +171,10 @@ Cleans target directory.")))
     (notify [this path ctx]
       (.invoke this path ctx))
     (describe [this]
-      "CSS preprocessor.
-
-Takes Sass/Scss files and turns them into CSS ones.
-
-Options:
---------
-
-  :source-path - relative directory with sass/scss resources to transform
-  :output-path - directory where to store generated CSSes
-  :sass-options - sass compiler options
-")))
+      (make-description "CSS preprocessor" "Takes Sass/Scss files and turns them into CSS ones."
+                        :source-path "relative directory with sass/scss resources to transform"
+                        :output-path "relative directory where to store generated CSSes"
+                        :sass-options "sass compiler options"))))
 
 (defmethod create-task ::assets [_ opts classpaths target]
   (let [default-opts {:update-with-exts ["js" "css" "html"]}
@@ -186,33 +186,18 @@ Options:
         (log/warn "Notification is not handled by \"assets\" task.")
         ctx)
       (describe [this]
-        "Static assets fingerprinter.
-
-Fingerprints static assets like images, scripts or styles.
-
-Options:
---------
-
-  :assets-paths - collection of paths with assets to fingerprint
-  :exclude-paths - collection of paths to exclude from fingerprinting
-  :update-with-exts - extensions of files to update with new references to fingerprinted assets
-
-By default all javascripts, stylesheets and HTML resources are scanned for references to
-fingerprinted assets. Any recognized reference is being replaced with fingerprinted version.
-"))))
+        (make-description "Static assets fingerprinter" "Fingerprints static assets like images, scripts or styles"
+                          :assets-paths "collection of paths with assets to fingerprint"
+                          :exclude-paths "collection of paths to exclude from fingerprinting"
+                          :update-with-exts "extensions of files to update with new references to fingerprinted assets")))))
 
 (defmethod create-task ::aot [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
       (aot/invoke ctx (merge opts input) classpaths target))
     (describe [this]
-      "Ahead-Of-Time compilation.
-
-Options:
---------
-
-  :exta-namespaces - collection of additional namespaces to compile.
-")))
+      (make-description "Ahead-Of-Time compilation" "Compiles project namespaces."
+                        :exta-namespaces "collection of additional namespaces to compile"))))
 
 (defmethod create-task ::cljs [_ opts classpaths target]
   (require 'cljs.build.api)
@@ -228,20 +213,9 @@ Options:
         (notify [this path ctx]
           (.invoke this nil ctx))
         (describe [this]
-          "CLJS compilation.
-
-Turns clojurescripts into javascripts with help of ClojureScript compiler.
-
-Options:
---------
-
-  :compiler - global clojurescript compiler options used for all builds
-  :builds - collection of builds, where each build consists of:
-
-            :id - build identifier
-            :source-paths - project-relative path of clojurescript files to compile
-            :compiler - clojurescript compiler options (https://clojurescript.org/reference/compiler-options)
-")))))
+          (make-description "CLJS compilation" "Turns clojurescripts into javascripts with help of ClojureScript compiler."
+                            :compiler "global clojurescript compiler options used for all builds"
+                            :builds "collection of builds, where each build consists of:\n  :id - build identifier\n  :source-paths - project-relative path of clojurescript files to compile\n  :compiler - clojurescript compiler options (https://clojurescript.org/reference/compiler-options)"))))))
 
 (defmethod create-task ::test [_ opts classpaths target]
   (System/setProperty "java.awt.headless" "true")
@@ -252,88 +226,70 @@ Options:
       (notify [this path ctx]
         (.invoke this nil ctx))
       (describe [this]
-        "Clojure tests runner based on bat-test (https://github.com/metosin/bat-test).
-
-Options:
---------
-
-  :test-matcher - regex used to select test namespaces (defaults to #\".*test\")
-  :parallel - run tests in parallel? (defaults to false)
-  :report - reporting function (:pretty, :progress or :junit)
-  :filter - function to filter the test vars
-  :notify - sound notification? (defaults to true)
-  :on-start - function to be called before running tests (after reloading namespaces)
-  :on-end - function to be called after running tests
-  :cloverage - enable Cloverage coverage report? (defaults to false)
-  :cloverage-opts - Cloverage options (defaults to nil)
-"))))
+        (make-description "Clojure tests runner" "Test runner based on bat-test (https://github.com/metosin/bat-test)."
+                          :notify "sound notification? (defaults to true)"
+                          :test-matcher "regex used to select test namespaces (defaults to #\".*test\")"
+                          :parallel "run tests in parallel? (defaults to false)"
+                          :report "reporting function (:pretty, :progress or :junit)"
+                          :filter "function to filter the test vars"
+                          :on-start "function to call before running tests (after reloading namespaces)"
+                          :on-end "function to be call after running tests"
+                          :cloverage "enable Cloverage coverage report? (defaults to false)"
+                          :cloverage-opts "Cloverage options (defaults to nil)")))))
 
 (defmethod create-task ::codox [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
       (codox/invoke ctx (merge opts input) target))
     (describe [this]
-      "API documentation generator.
-
-Options:
---------
-
-  :name - project name, eg. \"edge\"
-  :package - symbol describing project package, eg. defunkt.edge
-  :version - project version, eg. \"1.2.0\"
-  :description - project description to be shown
-  :namespaces - collection of namespaces to document (by default all namespaces are taken)
-")))
+      (make-description "API documentation generator" "Codox based API documentation."
+                        :name "project name, eg. \"edge\""
+                        :package "symbol describing project package, eg. defunkt.edge"
+                        :version "project version, eg. \"1.2.0\""
+                        :description "project description to be shown"
+                        :namespaces "collection of namespaces to document (by default all namespaces are taken)"))))
 
 (defmethod create-task ::info [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
       (info/invoke ctx (merge opts input) target))
     (describe [this]
-      "Project info generator.
+      (make-description "Project info generator" "Generates map of project-specific information used by other tasks."
+                        :name "project name, eg. \"edge\""
+                        :package "symbol describing project package, eg defunkt.edge"
+                        :version "project version"
+                        :description "project description to be shown"))))
 
-Generates map of project-specific information used by other tasks.
-
-Options:
---------
-
-  :name - project name, eg. \"edge\"
-  :package - symbol describing project package, eg defunkt.edge
-  :version - project version
-  :description - project description to be shown
-")))
+(defmethod create-task ::jar [_ opts classpaths target]
+  (reify Task
+    (invoke [this input ctx]
+      (jar/invoke ctx (merge opts input) target))
+    (describe [this]
+      (make-description "Jar packager" "Generates a jar package."
+                        :exclude-paths "collection of project paths to exclude from jar package"
+                        :output-jar "project related path of output jar, eg. dist/foo.jar"))))
 
 (defmethod create-task ::capsule [_ opts classpaths target]
   (reify Task
     (invoke [this input ctx]
       (capsule/invoke ctx (merge opts input) target))
     (describe [this]
-      "Capsule packager.
-
-Generates an uberjar-like capsule (http://www.capsule.io).
-
-Options:
---------
-
-  :capsule-type - type of capsule, one of :empty, :thin or :fat (defaults to :fat)
-  :exclude-paths - collection of project paths to exclude from capsule
-  :output-jar - project related path of output jar, eg. dist/foo.jar
-  :main - main class to be run
-
-Capsule options (http://www.capsule.io/reference):
-
-  :min-java-version
-  :min-update-version
-  :java-version
-  :jdk-required?
-  :jvm-args
-  :environment-variables
-  :system-properties
-  :security-manager
-  :security-policy
-  :security-policy-appended
-  :java-agents
-  :native-agents
-  :native-dependencies
-  :capsule-log-level
-")))
+      (make-description "Capsule packager" "Generates an uberjar-like capsule (http://www.capsule.io)."
+                        :capsule-type "type of capsule, one of :empty, :thin or :fat (defaults to :fat)"
+                        :exclude-paths "collection of project paths to exclude from capsule"
+                        :output-jar "project related path of output jar, eg. dist/foo.jar"
+                        :main "main class to be run"
+                        :min-java-version "http://www.capsule.io/reference"
+                        :min-update-version "http://www.capsule.io/reference"
+                        :java-version "http://www.capsule.io/reference"
+                        :jdk-required? "http://www.capsule.io/reference"
+                        :jvm-args "http://www.capsule.io/reference"
+                        :environment-variables "http://www.capsule.io/reference"
+                        :system-properties "http://www.capsule.io/reference"
+                        :security-manager "http://www.capsule.io/reference"
+                        :security-policy "http://www.capsule.io/reference"
+                        :security-policy-appended "http://www.capsule.io/reference"
+                        :java-agents "http://www.capsule.io/reference"
+                        :native-agents "http://www.capsule.io/reference"
+                        :native-dependencies "http://www.capsule.io/reference"
+                        :capsule-log-level "http://www.capsule.io/reference"))))
