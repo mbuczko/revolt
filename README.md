@@ -262,7 +262,7 @@ This is required only to keep things auto-reloadable - application needs to be a
 
 Here is the complete list of all accepted parameters:
 
-    -c, --config     : location of configuration resource. Defaults to "revolt.edn".
+    -c, --config     : location of configuration resource.
 
     -d, --target-dir : location of target directory (relative to project location). This is where all re/generated
                        assets are being stored. Defaults to "target".
