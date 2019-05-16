@@ -218,8 +218,8 @@ Following is the complete list of built-in tasks:
 | clean  | cleans target directory            |`:extra-paths` collection of additional paths to clean                                       |
 | sass   | converts sass/scss assets into CSS |`:source-path`  directory with sass/scss resources to transform<br>`:output-path` directory where to store generated CSSes<br>`:sass-options` additional sass-compiler options:<br>⇒ `:source-map` (bool) Enable source-maps for compiled CSS<br>⇒ `:output-style` :nested, :compact, :expanded or :compressed|
 | assets | fingerprints static assets like images, scripts or styles |`:assets-path` collection of paths with assets to fingerprint<br>`:exclude-paths` collection of paths to exclude from fingerprinting<br>`:update-with-exts` extensions of files to update with new references to fingerprinted assets<br><br>By default all javascripts, stylesheets and HTML resources are scanned for references to fingerprinted assets. Any recognized reference is being replaced with fingerprinted version.|
-| aot    | Ahead-Of-Time compilation          |`:exta-namespaces` collection of additional namespaces to compile                             |
-| jar    | JAR file packager                  |`:exclude-paths` collection of paths to exclude from jar package<br>`output-jar` path to output jar (dist/<name>-<version>.jar by default) |
+| aot    | Ahead-Of-Time compilation          |`:extra-namespaces` collection of additional namespaces to compile                             |
+| jar    | JAR file packager                  |`:exclude-paths` collection of paths to exclude from jar package<br>`:output-jar` path to output jar (dist/<name>-<version>.jar by default) |
 | cljs   | clojurescript compiler             |`:compiler` global clojurescript [compiler options](https://clojurescript.org/reference/compiler-options) used for all builds<br>`:builds` collection of builds, where each build consists of:<br>⇒ `:id` build identifier<br>⇒ `:source-paths` project-relative path of clojurescript files to compile<br>⇒ `:compiler` - clojurescript [compiler options](https://clojurescript.org/reference/compiler-options)|
 | test   | clojure.test runner                |`:notify` enable sound notification? (defaults to true)<br>`:parallel` run tests in parallel? (defaults to false)<br>`:test-matcher` regex to select test ns-es (defaults to #\".*test\")<br>`:report` reporting function (:pretty, :<zero-width space>progress or :junit)<br>`:filter` fn to filter the test vars<br>`:on-start` fn to call before running tests (after reloading namespaces)<br>`:on-end` fn to call after running tests<br>`:cloverage` enable Cloverage coverage report? (defaults to false)<br>`:cloverage-opts` Cloverage options (defaults to nil)|
 | codox  | API documentation generator        |`:name` project name, eg. "edge"<br>`:package` symbol describing project package, eg. defunkt.edge<br>`:version` project version, eg. "1.2.0"<br>`:description`  project description to be shown<br>`:namespaces` collection of ns-es to document (by default all ns-es)|
@@ -262,7 +262,7 @@ This is required only to keep things auto-reloadable - application needs to be a
 
 Here is the complete list of all accepted parameters:
 
-    -c, --config     : location of configuration resource. Defaults to "revolt.edn".
+    -c, --config     : location of configuration resource.
 
     -d, --target-dir : location of target directory (relative to project location). This is where all re/generated
                        assets are being stored. Defaults to "target".
