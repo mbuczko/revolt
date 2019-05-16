@@ -60,10 +60,8 @@
                                                  :source-paths))
                                     builds)]
 
-              (log/infof "Starting figwheel with builds: %s" (:builds config))
-
+              (log/info "Starting figwheel with builds: %s" (:builds config))
               (apply figwheel/start (cons figwheel-conf builds-conf)))
-
             (log/error "None of configured builds found.")))
         (log/error "revolt.task/cljs task needs to be configured.")))
 

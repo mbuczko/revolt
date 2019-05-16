@@ -3,7 +3,6 @@
             [clojure.tools.logging :as log]
             [rebel-readline.clojure.main]
             [rebel-readline.core]
-            [revolt.bootstrap]
             [revolt.plugin :refer [Plugin create-plugin]]))
 
 (defn init-plugin

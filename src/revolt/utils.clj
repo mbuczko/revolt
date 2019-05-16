@@ -18,15 +18,8 @@
 
 (defn filter-paths
   [paths to-exclude]
-  (cond
-    (set? to-exclude)
-    (filterv #(not (contains? to-exclude %)) paths)
-
-    (= (type to-exclude) java.util.regex.Pattern)
-    (filterv #(not (re-matches to-exclude %)) paths)
-
-    :else
-    paths))
+  {:pre [(set? to-exclude)]}
+  (filterv #(not (contains? to-exclude %)) paths))
 
 (defn resolve-sibling-paths
   [paths root]
@@ -43,7 +36,8 @@
   contains a namespace part. In case there is no namespace - a default one
   is added."
   [default-ns s]
-  (if (second (and s (.split s "/")))
+  {:pre [(string? s)]}
+  (if (second (.split s "/"))
     s
     (str default-ns "/" s)))
 

@@ -3,6 +3,7 @@
                      :version "1.3.0"
                      :description "Your trampoline to Clojure dev toolbox"}
  :revolt.task/clean {:extra-paths ["dist"]}
- :revolt.task/jar   {:exclude-paths #{"test" "config"}}
+ :revolt.task/jar   {:exclude-paths ["test" "config"]}
 
+ :revolt.plugin/rebel {:init-ns revolt.task}
  :revolt.plugin/nrepl {:port 5600}}

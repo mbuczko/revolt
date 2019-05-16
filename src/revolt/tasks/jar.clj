@@ -142,7 +142,7 @@
        (let [deps-edn  (io/file "deps.edn")
              deps-map  (-> deps-edn
                            (tools.deps.reader/slurp-deps)
-                           (update :paths utils/filter-paths exclude-paths)
+                           (update :paths utils/filter-paths (set exclude-paths))
                            (update :mvn/repos merge default-mvn-repos))
              deps-path (.. deps-edn toPath toAbsolutePath)
              classpath (tools.deps/make-classpath
