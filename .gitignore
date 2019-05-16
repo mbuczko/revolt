@@ -1,6 +1,7 @@
 .cider_history
 .nrepl-port
 .nrepl-history
+.rebel_readline_history
 .cpcache
 .sass-cache
 .sass-tmp

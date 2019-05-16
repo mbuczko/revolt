@@ -98,7 +98,7 @@
             ;; handle special arguments (keywords)
             (keyword? input-argument)
             (condp = input-argument
-              :describe
+              :help
               (println (io.aviso.ansi/yellow (.describe task)))
               (throw (Exception. "Keyword parameter not recognized by task.")))
 
@@ -215,9 +215,9 @@
         (describe [this]
           (make-description "CLJS compilation" "Turns clojurescripts into javascripts with help of ClojureScript compiler."
                             :compiler "global clojurescript compiler options used for all builds"
-                            :builds "collection of builds, where each build consists of:\n  :id - build identifier\n  :source-paths - project-relative path of clojurescript files to compile\n  :compiler - clojurescript compiler options (https://clojurescript.org/reference/compiler-options)"))))))
+                            :builds "collection of builds, where each build consists of:\n                          :id - build identifier\n                          :source-paths - project-relative path of clojurescript files to compile\n                          :compiler - clojurescript compiler options (https://clojurescript.org/reference/compiler-options)"))))))
 
-(defmethod create-task ::test [_ opts classpaths target]
+(defmethod create-task ::test [_ opts classpaths targetf]
   (System/setProperty "java.awt.headless" "true")
   (let [options (merge test/default-options opts)]
     (reify Task

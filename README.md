@@ -151,7 +151,7 @@ Let's talk about task arguments now.
 Having tasks configured doesn't mean they are sealed and can't be extended in current REPL session any more. Let's look at the `sass` task as an example. Although it generates CSSes based on
 configured `:source-path`, as all other tasks this one also accepts an argument which can be one of following types:
 
- - A keyword. This type of arguments is automatically handled by _revolt_. As for now only `:describe` responds - returns a human readable description of given task.
+ - A keyword. This type of arguments is automatically handled by _revolt_. As for now only `:help` responds - returns a human readable description of given task.
  - A `java.nio.file.Path`. This type of arguments is also automatically handled by _revolt_ and is considered as a notification that particular file has been changed and task should react upon. 
  `sass` task uses path to filter already configured `:resources` and rebuilds only a subset of SCSSes (if possible).
  - A map. Here it's up to task how to handle this kind of argument, by convension _revolt_ simply merges provided map into existing configuration:

@@ -1,14 +1,10 @@
 (ns ^{:clojure.tools.namespace.repl/load false} revolt.plugins.watch
   (:require [io.aviso.ansi]
-            [clojure.java.io :as io]
-            [clojure.java.classpath :as classpath]
             [clojure.tools.logging :as log]
-            [clojure.string :as str]
             [revolt.plugin :refer [Plugin create-plugin]]
             [revolt.task :as task]
             [revolt.watcher :as watcher]
-            [revolt.utils :as utils]
-            [revolt.bootstrap :as bootstrap]))
+            [revolt.utils :as utils]))
 
 (defn init-plugin
   "Initializes filesystem watcher plugin."
@@ -43,7 +39,7 @@
                              (if-not task
                                (log/errorf "No task %s found to react on change of: %s" task path)
                                (do
-                                 (log/debugf "changed: %s (=> %s)" path (task :describe))
+                                 (log/debug "changed: " path)
                                  (task path)))))))))))
 
     (deactivate [this ret]
