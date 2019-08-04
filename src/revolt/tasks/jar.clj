@@ -29,6 +29,19 @@
   (io/copy input-stream jar-stream)
   (doto jar-stream (.closeEntry)))
 
+(defn create-manifest
+  "Creates a manifest to the jar file."
+
+  [manifest-tuples & [main-class]]
+  (let [manifest (Manifest.)
+        attributes (.getMainAttributes manifest)]
+    (.put attributes Attributes$Name/MANIFEST_VERSION "1.0")
+    (when main-class
+      (.put attributes Attributes$Name/MAIN_CLASS main-class))
+    (doseq [[k v] manifest-tuples]
+      (.put attributes (Attributes$Name. k) v))
+    manifest))
+
 (def system-classpaths
   (memoize (fn []
              (map (memfn getFile)
@@ -44,20 +57,23 @@
   (with-open [input-stream (io/input-stream input)]
     (create-jar-entry name input-stream jar-stream)))
 
-(defn add-manifest
-  "Adds a manifest entry to the jar file."
+(defn add-maven-descriptor
+  "Adds a maven descriptor (pom.xml and pom.properties) to the jar file."
+  [^JarOutputStream jar-stream {:keys [group-id artifact-id version]}]
+  (let [prefix-path (str "META-INF/maven/" group-id "/" artifact-id)
+        pom (io/as-file "pom.xml")]
 
-  [^JarOutputStream jar-stream manifest-tuples & [main-class]]
-  (let [manifest (Manifest.)
-        attributes (.getMainAttributes manifest)]
-    (.put attributes Attributes$Name/MANIFEST_VERSION "1.0")
-    (when main-class
-      (.put attributes Attributes$Name/MAIN_CLASS main-class))
-    (doseq [[k v] manifest-tuples]
-      (.put attributes (Attributes$Name. k) v))
-    (let [baos (ByteArrayOutputStream.)]
-      (.write manifest baos)
-      (add-to-jar JarFile/MANIFEST_NAME (.toByteArray baos) jar-stream))))
+    ;; add pom.xml (if exists)
+    (when (.exists pom)
+      (add-to-jar (str prefix-path "/pom.xml") pom jar-stream))
+
+    ;; add pom.properties
+    (add-to-jar (str prefix-path "/pom.properties")
+                (.getBytes (str
+                            "version=" version  "\n"
+                            "groupId=" group-id "\n"
+                            "artifactId=" artifact-id "\n"))
+                jar-stream)))
 
 (defn add-classes-from-artifact
   [^JarOutputStream jar-stream artifact class-p]
@@ -124,10 +140,10 @@
   jar-stream)
 
 (defn build-jar
-  [^JarOutputStream jar-stream application classpath deps {:keys [aot? before-pack-fns]}]
+  [^JarOutputStream jar-stream coords classpath deps {:keys [aot? before-pack-fns]}]
   (let [classpaths (str/split classpath (re-pattern File/pathSeparator))]
     (-> jar-stream
-        (add-manifest [])
+        (add-maven-descriptor coords)
         (add-paths classpaths aot? before-pack-fns))))
 
 (defn invoke
@@ -136,9 +152,9 @@
         group-id    (or package (:package ctx))
         version     (or version (:version ctx))]
 
-    (if-let [library (and artifact-id group-id (str group-id ":" artifact-id))]
+    (if-let [output (and artifact-id group-id (str group-id ":" artifact-id))]
       (utils/timed
-       (str "JAR " library ":" (or version "<missing version>"))
+       (str "JAR " output ":" (or version "<missing version>"))
        (let [deps-edn  (io/file "deps.edn")
              deps-map  (-> deps-edn
                            (tools.deps.reader/slurp-deps)
@@ -154,15 +170,18 @@
                                            (map utils/ensure-absolute-path)
                                            (filter (complement nil?)))})
              output-jar (or output-jar (default-output-jar artifact-id version))
+             manifest   (create-manifest [])
              jar-file   (io/file output-jar)]
 
          ;; ensure that all directories in a path are created
          (io/make-parents jar-file)
 
-         (with-open [jar-stream (JarOutputStream. (io/output-stream jar-file))]
+         (with-open [jar-stream (JarOutputStream. (io/output-stream jar-file) manifest)]
            (try
              (build-jar jar-stream
-                        library
+                        {:group-id group-id
+                         :artifact-id artifact-id
+                         :version version}
                         classpath
                         (:deps deps-map)
                         ctx)
