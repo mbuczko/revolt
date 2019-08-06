@@ -58,8 +58,8 @@
           initial
           (keys config)))
 
-(defn config->capsule-manifest
-  "Converts task parameters to capsule manifest tuples."
+(defn config->manifest-entries
+  "Converts task parameters to capsule manifest entries."
 
   [{:keys [caplets scripts main args] :as config} application version]
   (-> [["Application-Class" "clojure.main"]
@@ -114,7 +114,7 @@
   jar-stream)
 
 (defn ensure-runtime-deps
-  [application manifest deps capsule-type]
+  [application manifest-entries deps capsule-type]
   (let [artifacts (->> deps
                        (map (fn [[dep coords]]
                               (when-let [version (:mvn/version coords)]
@@ -127,25 +127,25 @@
       (throw (Exception. "Some of dependecies have no :mvn/version assigned!"))
       (condp = capsule-type
         :empty
-        (-> manifest
+        (-> manifest-entries
             (utils/assoc-tuple-merging "Application" #{application}))
 
         :thin
-        (-> manifest
+        (-> manifest-entries
             (utils/assoc-tuple-merging "Caplets" #{"MavenCapsule"})
             (utils/assoc-tuple-merging "Repositories" #{"central" "clojars(https://repo.clojars.org/)"})
             (utils/assoc-tuple-merging "Dependencies" artifacts))
 
-        ;; return untouched manifest by default
-        manifest))))
+        ;; return untouched manifest entries by default
+        manifest-entries))))
 
 (defn build-jar
   "Builds a jar which is essentially a capsule of preconfigured type."
 
-  [^JarOutputStream jar-stream application classpath manifest deps caplets capsule-type {:keys [aot? before-pack-fns]}]
+  [^JarOutputStream jar-stream application classpath caplets capsule-type {:keys [aot? before-pack-fns]}]
   (let [classpaths (str/split classpath (re-pattern File/pathSeparator))]
+
     (-> jar-stream
-        (jar/add-manifest (ensure-runtime-deps application manifest deps capsule-type) capsule-default-name)
         (add-capsule-class)
         (add-caplets-jars caplets)
 
@@ -195,18 +195,19 @@
                                            (map utils/ensure-absolute-path)
                                            (filter (complement nil?)))})
              output-jar (or output-jar (jar/default-output-jar artifact-id version))
-             jar-file   (io/file output-jar)]
+             jar-file   (io/file output-jar)
+             entries    (config->manifest-entries config application version)
+             manifest   (jar/create-manifest
+                         (ensure-runtime-deps application entries (:deps deps-map) capsule-type) capsule-default-name)]
 
          ;; ensure that all directories in a path are created
          (io/make-parents jar-file)
 
-         (with-open [jar-stream (JarOutputStream. (io/output-stream jar-file))]
+         (with-open [jar-stream (JarOutputStream. (io/output-stream jar-file) manifest)]
            (try
              (build-jar jar-stream
                         application
                         classpath
-                        (config->capsule-manifest config application version)
-                        (:deps deps-map)
                         (into #{} (keys (:caplets config)))
                         (keyword caps-type)
                         ctx)
