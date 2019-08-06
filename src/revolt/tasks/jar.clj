@@ -8,7 +8,7 @@
   (:import  (java.io File InputStream ByteArrayOutputStream)
             (java.net URLClassLoader)
             (java.util.jar Attributes$Name JarEntry JarOutputStream JarInputStream Manifest JarFile)
-            (java.util.zip ZipEntry)))
+            (java.util.zip ZipException)))
 
 (def default-mvn-repos
   {"central" {:url "https://repo1.maven.org/maven2/"}
@@ -17,17 +17,38 @@
 (defn default-output-jar
   "Returns default jar file locaction."
 
-  [artifact-id version]
+  [{:keys [artifact-id version]}]
   (str "dist/" artifact-id (when version (str "-" version)) ".jar"))
+
+(defn entry-parents
+  [file]
+  (let [getparent (fn [^java.io.File f] (.getParent f))]
+    (->> file
+         (iterate (comp getparent io/file))
+         (drop 1)
+         (take-while (complement empty?))
+         (reverse))))
+
+(defn dupe? [^Throwable t]
+  (and (instance? ZipException t)
+       (.startsWith (.getMessage t) "duplicate entry:")))
 
 (defn create-jar-entry
   "Creates a new entry in a jar out of given name and InputStream."
 
   [name ^InputStream input-stream ^JarOutputStream jar-stream]
-  (log/debug "adding to jar:" name)
-  (.putNextEntry jar-stream (ZipEntry. name))
-  (io/copy input-stream jar-stream)
-  (doto jar-stream (.closeEntry)))
+  (let [sanitized (str (.replaceAll name "\\\\" "/")
+                       (when-not input-stream "/"))]
+    (try
+      (.putNextEntry jar-stream (JarEntry. sanitized))
+      (catch Exception e
+        ;; ignore duplicated entries
+        (when-not (dupe? e) (throw e))))
+    (when input-stream
+      (io/copy input-stream jar-stream))
+
+    (log/debug sanitized)
+    (doto jar-stream (.closeEntry))))
 
 (defn create-manifest
   "Creates a manifest to the jar file."
@@ -37,7 +58,7 @@
         attributes (.getMainAttributes manifest)]
     (.put attributes Attributes$Name/MANIFEST_VERSION "1.0")
     (when main-class
-      (.put attributes Attributes$Name/MAIN_CLASS main-class))
+      (.put attributes Attributes$Name/MAIN_CLASS (.replaceAll (str main-class) "-" "_")))
     (doseq [[k v] manifest-tuples]
       (.put attributes (Attributes$Name. k) v))
     manifest))
@@ -54,6 +75,9 @@
   closing entry InputStream."
 
   [name input ^JarOutputStream jar-stream]
+  (doseq [d (entry-parents (io/file name))]
+    (create-jar-entry d nil jar-stream))
+
   (with-open [input-stream (io/input-stream input)]
     (create-jar-entry name input-stream jar-stream)))
 
@@ -169,7 +193,10 @@
                                            (concat extra-paths)
                                            (map utils/ensure-absolute-path)
                                            (filter (complement nil?)))})
-             output-jar (or output-jar (default-output-jar artifact-id version))
+             coords     {:group-id group-id
+                         :artifact-id artifact-id
+                         :version version}
+             output-jar (or output-jar (default-output-jar coords))
              manifest   (create-manifest [])
              jar-file   (io/file output-jar)]
 
@@ -178,18 +205,11 @@
 
          (with-open [jar-stream (JarOutputStream. (io/output-stream jar-file) manifest)]
            (try
-             (build-jar jar-stream
-                        {:group-id group-id
-                         :artifact-id artifact-id
-                         :version version}
-                        classpath
-                        (:deps deps-map)
-                        ctx)
-
+             (build-jar jar-stream coords classpath (:deps deps-map) ctx)
              (catch Throwable t
                (log/errorf "Error while creating a jar file: %s" (.getMessage t))))
 
-           ;; return libraty location as a result
+           ;; return library location as a result
            (assoc ctx :jar-file output-jar))))
 
       (throw (Exception. "No 'name' or 'package' parameters provided in task configuration and context.")))))
