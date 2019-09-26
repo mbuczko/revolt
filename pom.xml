@@ -21,12 +21,12 @@
     <dependency>
       <groupId>eftest</groupId>
       <artifactId>eftest</artifactId>
-      <version>0.5.7</version>
+      <version>0.5.8</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.logging</artifactId>
-      <version>0.5.0-alpha.1</version>
+      <version>0.5.0</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
@@ -51,12 +51,12 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.namespace</artifactId>
-      <version>0.3.0-alpha4</version>
+      <version>0.3.1</version>
     </dependency>
     <dependency>
       <groupId>metosin</groupId>
       <artifactId>bat-test</artifactId>
-      <version>0.4.2</version>
+      <version>0.4.3</version>
     </dependency>
     <dependency>
       <groupId>net.sf.jpathwatch</groupId>
@@ -71,7 +71,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.deps.alpha</artifactId>
-      <version>0.6.496</version>
+      <version>0.7.549</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -82,7 +82,7 @@
     <dependency>
       <groupId>codox</groupId>
       <artifactId>codox</artifactId>
-      <version>0.10.6</version>
+      <version>0.10.7</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
@@ -92,7 +92,7 @@
     <dependency>
       <groupId>deraen</groupId>
       <artifactId>sass4clj</artifactId>
-      <version>0.3.1</version>
+      <version>0.4.1</version>
     </dependency>
   </dependencies>
   <build>
