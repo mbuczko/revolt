@@ -97,7 +97,7 @@
   (doseq [caplet (filter #(not= "MavenCapsule" %) caplets)]
     (let [[group artifact-id version] (.split caplet ":")
           clpath (str (str/replace group #"\." "/") "/" artifact-id "/" version)]
-      (when-let [caplet-jar (->> (jar/system-classpaths)
+      (when-let [caplet-jar (->> (jar/classpaths)
                                  (filter #(.contains % clpath))
                                  (first)
                                  (io/file))]

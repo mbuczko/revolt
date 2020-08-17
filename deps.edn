@@ -4,7 +4,7 @@
          org.clojure/tools.logging {:mvn/version "0.5.0"}
          org.clojure/tools.namespace {:mvn/version "0.3.1"}
          org.clojure/tools.deps.alpha {:mvn/version "0.7.549" :exclusions [org.slf4j/slf4j-nop]}
-
+         org.tcrawley/dynapath {:mvn/version "1.1.0"}
          com.bhauman/rebel-readline {:mvn/version "0.1.4"}
          net.sf.jpathwatch/jpathwatch {:mvn/version "0.95"}
          io.aviso/pretty {:mvn/version "0.1.37"}

@@ -1,6 +1,5 @@
 (ns revolt.tasks.assets
-  (:require [sass4clj.core :as sass]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [revolt.utils :as utils])
@@ -9,6 +8,20 @@
             (java.nio.file Files)))
 
 (def ^:const buffer-len 2048)
+(def ^:private hex-digits (char-array "0123456789ABCDEF"))
+
+;; stolen from clojurescript's utils
+(defn- bytes-to-hex-str
+  "Convert an array of bytes into a hex encoded string."
+  [^bytes bytes]
+  (loop [index (int 0)
+         buffer (StringBuilder. (int (* 2 (alength bytes))))]
+    (if (== (alength bytes) index)
+      (.toString buffer)
+      (let [byte (aget bytes index)]
+        (.append buffer (aget ^chars hex-digits (bit-and (bit-shift-right byte 4) 0xF)))
+        (.append buffer (aget ^chars hex-digits (bit-and byte 0xF)))
+        (recur (inc index) buffer)))))
 
 (def copy-options
   (into-array StandardCopyOption [StandardCopyOption/REPLACE_EXISTING]))
@@ -30,7 +43,7 @@
 (defn hashed-name
   [file]
   (let [digest (mk-sha256 file)]
-    (str (javax.xml.bind.DatatypeConverter/printHexBinary (.digest digest)) "-" (.getName file))))
+    (str (bytes-to-hex-str (.digest digest)) "-" (.getName file))))
 
 (defn excluded?
   [path exclude-paths]
