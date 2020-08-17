@@ -10,8 +10,8 @@
          io.aviso/pretty {:mvn/version "0.1.37"}
          deraen/sass4clj {:mvn/version "0.4.1"}
          metosin/bat-test {:mvn/version "0.4.3"}
-         codox {:mvn/version "0.10.7"}
-         eftest {:mvn/version "0.5.8"}
+         codox/codox {:mvn/version "0.10.7"}
+         eftest/eftest {:mvn/version "0.5.8"}
          javazoom/jlayer {:mvn/version "1.0.1"}
          ch.qos.logback/logback-classic {:mvn/version "1.2.3"}}
 
