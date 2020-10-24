@@ -1,7 +1,6 @@
 (ns revolt.tasks.jar
   (:require [revolt.utils :as utils]
             [clojure.java.io :as io]
-            [clojure.tools.deps.alpha.reader :as tools.deps.reader]
             [clojure.tools.deps.alpha :as tools.deps]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
@@ -206,7 +205,7 @@
        (str "JAR " output ":" (or version "<missing version>"))
        (let [deps-edn  (io/file "deps.edn")
              deps-map  (-> deps-edn
-                           (tools.deps.reader/slurp-deps)
+                           (tools.deps/slurp-deps)
                            (update :paths utils/filter-paths (set exclude-paths))
                            (update :mvn/repos merge default-mvn-repos))
              deps-path (.. deps-edn toPath toAbsolutePath)
