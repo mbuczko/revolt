@@ -1,6 +1,5 @@
 (ns revolt.tasks.capsule
   (:require [clojure.tools.deps.alpha :as tools.deps]
-            [clojure.tools.deps.alpha.reader :as tools.deps.reader]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
@@ -97,7 +96,7 @@
   (doseq [caplet (filter #(not= "MavenCapsule" %) caplets)]
     (let [[group artifact-id version] (.split caplet ":")
           clpath (str (str/replace group #"\." "/") "/" artifact-id "/" version)]
-      (when-let [caplet-jar (->> (jar/system-classpaths)
+      (when-let [caplet-jar (->> (jar/classpaths)
                                  (filter #(.contains % clpath))
                                  (first)
                                  (io/file))]
@@ -182,7 +181,7 @@
        (str "CAPSULE " application ":" (or version "<missing version>") " (" caps-type ")")
        (let [deps-edn  (io/file "deps.edn")
              deps-map  (-> deps-edn
-                           (tools.deps.reader/slurp-deps)
+                           (tools.deps/slurp-deps)
                            (update :paths utils/filter-paths (set exclude-paths))
                            (update :mvn/repos merge jar/default-mvn-repos))
              deps-path (.. deps-edn toPath toAbsolutePath)

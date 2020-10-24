@@ -1,10 +1,10 @@
 (ns revolt.tasks.jar
   (:require [revolt.utils :as utils]
             [clojure.java.io :as io]
-            [clojure.tools.deps.alpha.reader :as tools.deps.reader]
             [clojure.tools.deps.alpha :as tools.deps]
             [clojure.tools.logging :as log]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [dynapath.util :as dp])
   (:import  (java.io File InputStream ByteArrayOutputStream)
             (java.net URLClassLoader)
             (java.util.jar Attributes$Name JarEntry JarOutputStream JarInputStream Manifest JarFile)
@@ -63,10 +63,34 @@
       (.put attributes (Attributes$Name. k) v))
     manifest))
 
-(def system-classpaths
+(defn classloaders
+  "Returns the classloader hierarchy."
+
+  [^ClassLoader loader]
+  (->> loader
+       (iterate #(.getParent ^ClassLoader %))
+       (take-while identity)))
+
+(defn system-classpath
+  "Returns the URLs defined by the 'java.class.path' system property."
+  []
+  (map (comp io/as-url io/as-file)
+       (.split (System/getProperty "java.class.path")
+               (System/getProperty "path.separator"))))
+
+(defn classpaths*
+  "Returns the URLs on the classpath."
+  []
+  (let [loader (.getContextClassLoader (Thread/currentThread))]
+    (->> (classloaders loader)
+         (mapcat dp/classpath-urls)
+         (concat (system-classpath))
+         (distinct))))
+
+(def classpaths
   (memoize (fn []
-             (map (memfn getFile)
-                  (.getURLs (URLClassLoader/getSystemClassLoader))))))
+             (map (memfn getFile) (classpaths*)))))
+
 
 (defn add-to-jar
   "Adds new entry to jar file.
@@ -101,7 +125,7 @@
 
 (defn add-classes-from-artifact
   [^JarOutputStream jar-stream artifact class-p]
-  (if-let [capsule-jar (some #(when (.contains % artifact) %) (system-classpaths))]
+  (if-let [capsule-jar (some #(when (.contains % artifact) %) (classpaths))]
     (with-open [capsule-is  (io/input-stream capsule-jar)
                 capsule-jis (JarInputStream. capsule-is)]
       (loop [^JarEntry entry (.getNextJarEntry capsule-jis)]
@@ -181,7 +205,7 @@
        (str "JAR " output ":" (or version "<missing version>"))
        (let [deps-edn  (io/file "deps.edn")
              deps-map  (-> deps-edn
-                           (tools.deps.reader/slurp-deps)
+                           (tools.deps/slurp-deps)
                            (update :paths utils/filter-paths (set exclude-paths))
                            (update :mvn/repos merge default-mvn-repos))
              deps-path (.. deps-edn toPath toAbsolutePath)

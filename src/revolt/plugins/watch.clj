@@ -16,7 +16,6 @@
       (let [excludes   (utils/gather-paths excluded-paths)
             explicit   (utils/gather-paths explicit-paths)
             filesystem (java.nio.file.FileSystems/getDefault)
-            root-dir   (utils/current-dir filesystem)
             classpaths (or (seq (map #(.toFile %) explicit))
                             (remove
                              #(contains? excludes (.toPath %))
@@ -33,13 +32,13 @@
         (apply watcher/watch-files
                (conj classpaths
                      (fn [{:keys [file]}]
-                       (let [path (.relativize root-dir (.toPath file))]
+                       (let [path (.toPath file)]
                          (doseq [[matcher task] matchers]
                            (when (.matches matcher path)
                              (if-not task
                                (log/errorf "No task %s found to react on change of: %s" task path)
                                (do
-                                 (log/debug "changed: " path)
+                                 (log/debug "changed:" (str path))
                                  (task path)))))))))))
 
     (deactivate [this ret]

@@ -7,7 +7,7 @@
 
 (defn invoke [ctx kv target]
   (utils/timed
-   "INFO"
+   (str "INFO " kv)
    (-> ctx
        (assoc :sha (git rev-parse --short HEAD)
               :tag (git describe --abbrev=0 --tags HEAD)

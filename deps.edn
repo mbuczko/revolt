@@ -1,17 +1,17 @@
 {:paths ["src" "resources" "config"]
- :deps  {org.clojure/java.classpath {:mvn/version "0.3.0"}
-         org.clojure/tools.cli {:mvn/version "0.4.2"}
-         org.clojure/tools.logging {:mvn/version "0.5.0"}
-         org.clojure/tools.namespace {:mvn/version "0.3.1"}
-         org.clojure/tools.deps.alpha {:mvn/version "0.7.549" :exclusions [org.slf4j/slf4j-nop]}
-
+ :deps  {org.clojure/java.classpath {:mvn/version "1.0.0"}
+         org.clojure/tools.cli {:mvn/version "1.0.194"}
+         org.clojure/tools.logging {:mvn/version "1.1.0"}
+         org.clojure/tools.namespace {:mvn/version "1.0.0"}
+         org.clojure/tools.deps.alpha {:mvn/version "0.9.833" :exclusions [org.slf4j/slf4j-nop]}
+         org.tcrawley/dynapath {:mvn/version "1.1.0"}
          com.bhauman/rebel-readline {:mvn/version "0.1.4"}
          net.sf.jpathwatch/jpathwatch {:mvn/version "0.95"}
          io.aviso/pretty {:mvn/version "0.1.37"}
-         deraen/sass4clj {:mvn/version "0.4.1"}
-         metosin/bat-test {:mvn/version "0.4.3"}
-         codox {:mvn/version "0.10.7"}
-         eftest {:mvn/version "0.5.8"}
+         deraen/sass4clj {:mvn/version "0.5.1"}
+         metosin/bat-test {:mvn/version "0.4.4"}
+         codox/codox {:mvn/version "0.10.7"}
+         eftest/eftest {:mvn/version "0.5.9"}
          javazoom/jlayer {:mvn/version "1.0.1"}
          ch.qos.logback/logback-classic {:mvn/version "1.2.3"}}
 
