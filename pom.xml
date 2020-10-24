@@ -21,17 +21,17 @@
     <dependency>
       <groupId>eftest</groupId>
       <artifactId>eftest</artifactId>
-      <version>0.5.8</version>
+      <version>0.5.9</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.logging</artifactId>
-      <version>0.5.0</version>
+      <version>1.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.cli</artifactId>
-      <version>0.4.2</version>
+      <version>1.0.194</version>
     </dependency>
     <dependency>
       <groupId>javazoom</groupId>
@@ -51,12 +51,12 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.namespace</artifactId>
-      <version>0.3.1</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>metosin</groupId>
       <artifactId>bat-test</artifactId>
-      <version>0.4.3</version>
+      <version>0.4.4</version>
     </dependency>
     <dependency>
       <groupId>net.sf.jpathwatch</groupId>
@@ -66,12 +66,12 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>java.classpath</artifactId>
-      <version>0.3.0</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.deps.alpha</artifactId>
-      <version>0.7.549</version>
+      <version>0.9.833</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -92,7 +92,7 @@
     <dependency>
       <groupId>deraen</groupId>
       <artifactId>sass4clj</artifactId>
-      <version>0.4.1</version>
+      <version>0.5.1</version>
     </dependency>
   </dependencies>
   <build>
