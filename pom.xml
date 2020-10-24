@@ -4,7 +4,7 @@
   <name>revolt</name>
   <groupId>defunkt</groupId>
   <artifactId>revolt</artifactId>
-  <version>1.3.8</version>
+  <version>1.3.9</version>
   <description>Your trampoline to Clojure dev toolbox</description>
   <licenses>
     <license>
