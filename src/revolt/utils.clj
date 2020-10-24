@@ -23,7 +23,7 @@
 
 (defn resolve-sibling-paths
   [paths root]
-  (map #(.resolveSibling root %) paths))
+  (map #(str (.resolveSibling root %)) paths))
 
 (defn current-dir
   ([]
